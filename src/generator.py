@@ -1,7 +1,8 @@
 from enum import Enum
 from typing import List
+import numpy as np
 
-from PIL import Image
+from PIL import Image, ImageChops
 
 from genes import Elipse, Shape, Triangle
 from individual import Individual
@@ -27,4 +28,15 @@ class Generator:
                 shapes.append(self.shape.random(og_img.size))
             individual = Individual(shapes, og_img.size)
             self.individuals.append(individual)
+
+    # Value closer to 0 is more similar.
+    def fitness(self, individual: Individual) -> np.double:
+        if individual.img.size != self.og_img.size:
+            raise ValueError("Images must have the same dimensions.")
+
+        diff = ImageChops.difference(individual.img, self.og_img)
+        np_diff = np.array(diff)
+
+        return np.mean(np_diff)
+
 
