@@ -4,12 +4,13 @@ import numpy as np
 
 from PIL import Image, ImageChops
 
-from genes import Elipse, Shape, Triangle
+from genes import Elipse, Shape, Square, Triangle
 from individual import Individual
 
 class ShapeType(Enum):
     TRIANGLE = "Triangle"
     ELLIPSE = "Ellipse"
+    SQUARE = "Square"
 
 class Generator:
     def __init__(self, og_img: Image.Image, shape_count: int, shape_type: ShapeType, initial_pop: int) -> None:
@@ -19,6 +20,8 @@ class Generator:
             self.shape = Triangle
         if shape_type == ShapeType.ELLIPSE:
             self.shape = Elipse
+        if shape_type == ShapeType.SQUARE:
+            self.shape = Square
 
         self.individuals: List[Individual] = []
 
@@ -38,5 +41,3 @@ class Generator:
         np_diff = np.array(diff)
 
         return np.mean(np_diff)
-
-
