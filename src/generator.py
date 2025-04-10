@@ -25,9 +25,9 @@ class Generator:
 
         self.individuals: List[Individual] = []
 
-        for _ in range(1, initial_pop):
+        for _ in range(0, initial_pop):
             shapes: List[Shape] = []
-            for _ in range(1, shape_count):
+            for _ in range(0, shape_count):
                 shapes.append(self.shape.random(og_img.size))
             individual = Individual(shapes, og_img.size)
             self.individuals.append(individual)
