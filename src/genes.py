@@ -1,3 +1,4 @@
+import random
 from typing import Tuple
 from abc import ABC, abstractmethod
 from PIL import ImageDraw
@@ -10,6 +11,12 @@ class Shape(ABC):
     def draw(self, img_draw: ImageDraw.ImageDraw) -> None:
         pass
 
+    @classmethod
+    @abstractmethod
+    # Return type should be of the same class (Shape or its subclass)
+    def random(cls, img_size: Tuple[int, int]) -> "Shape":
+        pass
+
 
 class Triangle(Shape):
     def __init__(self, color: Tuple[int,int,int,int], vertices: Tuple[Tuple[int, int], Tuple[int, int], Tuple[int, int]]) -> None:
@@ -19,6 +26,15 @@ class Triangle(Shape):
     def draw(self, img_draw: ImageDraw.ImageDraw) -> None:
         img_draw.polygon(self.vertices, fill=self.color)
 
+    @classmethod
+    def random(cls, img_size: Tuple[int, int]) -> "Triangle":
+        color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        x1, y1 = random.randint(0, img_size[0]), random.randint(0, img_size[1])
+        x2, y2 = random.randint(0, img_size[0]), random.randint(0, img_size[1])
+        x3, y3 = random.randint(0, img_size[0]), random.randint(0, img_size[1])
+        
+        return Triangle(color, ((x1, y1), (x2, y2), (x3, y3)))
+
 class Elipse(Shape):
     def __init__(self, color: Tuple[int,int,int,int], top_left: Tuple[int, int], bottom_right: Tuple[int, int]) -> None:
         super().__init__(color)
@@ -27,3 +43,14 @@ class Elipse(Shape):
 
     def draw(self, img_draw: ImageDraw.ImageDraw) -> None:
         img_draw.ellipse([*self.top_left, *self.bottom_right], fill=self.color)
+
+    @classmethod
+    def random(cls, img_size: Tuple[int, int]) -> "Elipse":
+        color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        x1 = random.randint(0, img_size[0] // 2)
+        y1 = random.randint(0, img_size[1] // 2)
+        # Ensure bottom-right is to the right and bottom of top-left
+        x2 = random.randint(x1, img_size[0])
+        y2 = random.randint(y1, img_size[1])
+        
+        return Elipse(color, (x1, y1), (x2, y2))
