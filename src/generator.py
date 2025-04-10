@@ -4,7 +4,7 @@ import numpy as np
 
 from PIL import Image, ImageChops
 
-from genes import Elipse, Shape, Square, Triangle
+from genes import Ellipse, Shape, Square, Triangle
 from individual import Individual
 
 class ShapeType(Enum):
@@ -19,7 +19,7 @@ class Generator:
         if shape_type == ShapeType.TRIANGLE:
             self.shape = Triangle
         if shape_type == ShapeType.ELLIPSE:
-            self.shape = Elipse
+            self.shape = Ellipse
         if shape_type == ShapeType.SQUARE:
             self.shape = Square
 

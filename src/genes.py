@@ -61,7 +61,7 @@ class Square(Polygon):
         
         return Square(color, ((x1, y1), (x2, y2), (x3, y3), (x4, y4)))
 
-class Elipse(Shape):
+class Ellipse(Shape):
     def __init__(self, color: Tuple[int,int,int,int], top_left: Tuple[int, int], bottom_right: Tuple[int, int]) -> None:
         super().__init__(color)
         self.top_left = top_left
@@ -71,7 +71,7 @@ class Elipse(Shape):
         img_draw.ellipse([*self.top_left, *self.bottom_right], fill=self.color)
 
     @classmethod
-    def random(cls, img_size: Tuple[int, int]) -> "Elipse":
+    def random(cls, img_size: Tuple[int, int]) -> "Ellipse":
         color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         x1 = random.randint(0, img_size[0] // 2)
         y1 = random.randint(0, img_size[1] // 2)
@@ -79,5 +79,5 @@ class Elipse(Shape):
         x2 = random.randint(x1, img_size[0])
         y2 = random.randint(y1, img_size[1])
         
-        return Elipse(color, (x1, y1), (x2, y2))
+        return Ellipse(color, (x1, y1), (x2, y2))
 
