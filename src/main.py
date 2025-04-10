@@ -1,14 +1,9 @@
-from PIL import Image, ImageDraw, ImageChops
+from typing import List
+from PIL import Image, ImageChops
 import numpy as np
 
-def draw_triangles_pillow(coord_triplets, colors, size=(300, 300), background=(255, 255, 255, 0)):
-    img = Image.new("RGBA", size, background)
-    draw = ImageDraw.Draw(img, "RGBA")
-
-    for vertices, color in zip(coord_triplets, colors):
-        draw.polygon(vertices, fill=color)
-
-    return img
+from genes import Elipse, Shape, Triangle
+from individual import Individual
 
 # Value closer to 0 is more similar.
 def compare_images(img1, img2):
@@ -20,27 +15,19 @@ def compare_images(img1, img2):
 
     return np.mean(np_diff)
 
-# Example usage:
+reference_img = Image.open("./assets/triangles.png").convert("RGBA")
 
-# Triangle data
-coords = [
-    [(50, 50), (150, 50), (100, 130)],
-    [(160, 60), (210, 40), (200, 100)]
+triangles: List[Shape] = [
+    Triangle((255, 120,   0, 255), (( 0,   0), ( 20,   0), (  0,  20))),
+    Triangle((255, 255, 100, 128), (( 0,   0), ( 30,   0), (  0,  10))),
+    Triangle((255,   0,   0, 128), ((50, 100), (200, 100), (150, 150))),
+    Triangle((  0, 120, 255, 250), ((30,  30), (  0,  50), ( 90, 90))),
+    Elipse((  255, 120, 255, 100), (30,  30), (  50,  100)),
 ]
-
-colors = [
-    (255, 0, 0, 128),  # semi-transparent red
-    (0, 255, 0, 255)   # solid green
-]
-
-# Load reference image
-reference = Image.open("./assets/triangles.png").convert("RGBA")
-
-# Draw and save generated image
-generated = draw_triangles_pillow(coords, colors, reference.size)
-generated.save("./generated/test.png")
+i1 = Individual(triangles, reference_img.size)
+i1.img.save("./generated/test.png")
 
 
 # Compare
-similarity = compare_images(generated, reference)
+similarity = compare_images(i1.img, reference_img)
 print(f"Similarity: {similarity}")

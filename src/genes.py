@@ -1,36 +1,29 @@
 from typing import Tuple
+from abc import ABC, abstractmethod
+from PIL import ImageDraw
+
+class Shape(ABC):
+    def __init__(self, color: Tuple[int,int,int,int]) -> None:
+        self.color = color
+
+    @abstractmethod
+    def draw(self, img_draw: ImageDraw.ImageDraw) -> None:
+        pass
 
 
-class ColorGene:
-    def __init__(self, rgba: int) -> None:
-        if not (0 <= rgba <= 0xFFFFFFFF):
-            raise ValueError("RGBA value must be a 32-bit integer (0 to 0xFFFFFFFF)")
-        self.rgba = rgba
-
-    @property
-    def red(self) -> int:
-        return (self.rgba >> 24) & 0xFF
-
-    @property
-    def green(self) -> int:
-        return (self.rgba >> 16) & 0xFF
-
-    @property
-    def blue(self) -> int:
-        return (self.rgba >> 8) & 0xFF
-
-    @property
-    def alpha(self) -> int:
-        return self.rgba & 0xFF
-
-    def __repr__(self) -> str:
-        return f"ColorGene(R={self.red}, G={self.green}, B={self.blue}, A={self.alpha})"
-
-# class ShapeGene:
-#     def __init__(self) -> None:
-#         pass
-#
-
-class TriangleGene:
-    def __init__(self, vertices: Tuple[Tuple[int, int], Tuple[int, int], Tuple[int, int]]) -> None:
+class Triangle(Shape):
+    def __init__(self, color: Tuple[int,int,int,int], vertices: Tuple[Tuple[int, int], Tuple[int, int], Tuple[int, int]]) -> None:
+        super().__init__(color)
         self.vertices = vertices
+
+    def draw(self, img_draw: ImageDraw.ImageDraw) -> None:
+        img_draw.polygon(self.vertices, fill=self.color)
+
+class Elipse(Shape):
+    def __init__(self, color: Tuple[int,int,int,int], top_left: Tuple[int, int], bottom_right: Tuple[int, int]) -> None:
+        super().__init__(color)
+        self.top_left = top_left
+        self.bottom_right = bottom_right
+
+    def draw(self, img_draw: ImageDraw.ImageDraw) -> None:
+        img_draw.ellipse([*self.top_left, *self.bottom_right], fill=self.color)
