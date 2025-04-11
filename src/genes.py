@@ -3,13 +3,14 @@ from abc import ABC, abstractmethod
 from PIL import ImageDraw
 from PIL import Image
 from utils import rand_vertex, randint, clamp, sum_vec
+import cairo
 
 class Shape(ABC):
     def __init__(self, color: Tuple[int,int,int,int]) -> None:
         self.color = color
 
     @abstractmethod
-    def draw(self, img_draw: ImageDraw.ImageDraw) -> None:
+    def draw(self, ctx: cairo.Context):
         pass
 
     @classmethod
@@ -43,8 +44,23 @@ class Polygon(Shape):
         super().__init__(color)
         self.vertices = vertices
 
-    def draw(self, img_draw: ImageDraw.ImageDraw) -> None:
-        img_draw.polygon(self.vertices, fill=self.color)
+    def draw(self, ctx: cairo.Context):
+        # Normalize RGBA to 0–1
+        r, g, b, a = [c / 255.0 for c in self.color]
+
+        # Set color with alpha
+        ctx.set_source_rgba(r, g, b, a)
+
+        # Move to first point
+        ctx.move_to(*self.vertices[0])
+
+        # Draw lines to other points
+        for point in self.vertices[1:]:
+            ctx.line_to(*point)
+
+        # Close the triangle and fill
+        ctx.close_path()
+        ctx.fill()
 
     def mutate(self):
         super().mutate()
@@ -104,39 +120,39 @@ class Square(Polygon):
     def clone(self) -> "Square":
         return Square(self.color, self.vertices)
 
-class Ellipse(Shape):
-    def __init__(self, color: Tuple[int,int,int,int], center: Tuple[int, int], radii: Tuple[int, int], angle: float = 0) -> None:
-        super().__init__(color)
-        self.center = center
-        self.radii = radii
-        self.angle = angle  # Angle in degrees for rotation
-
-    def draw(self, img_draw: ImageDraw.ImageDraw) -> None:
-        ellipse_width = self.radii[0]*2
-        ellipse_height = self.radii[1]*2
-        ellipse_img = Image.new('RGBA', (ellipse_width, ellipse_height), (0, 0, 0, 0))
-        ellipse_draw = ImageDraw.Draw(ellipse_img)
-        ellipse_draw.ellipse([0, 0, ellipse_width, ellipse_height], fill=self.color)
-        rotated_ellipse = ellipse_img.rotate(self.angle, expand=True)
-
-        # Paste the rotated ellipse onto the original image
-        corner_coords = (
-            self.center[0] - rotated_ellipse.size[0] // 2,
-            self.center[1] - rotated_ellipse.size[1] // 2
-        )
-        img_draw.bitmap(corner_coords, rotated_ellipse, fill=self.color)
-
-    @classmethod
-    def random(cls, img_size: Tuple[int, int]) -> "Ellipse":
-        color = (randint(0, 255), randint(0, 255), randint(0, 255), randint(0, 255))
-        center = (randint(0, img_size[0]), randint(0, img_size[1]))
-        radii = (randint(0, img_size[0] // 2), randint(0, img_size[1] // 2))
-        angle = randint(0, 360)
-        
-        return Ellipse(color, center, radii, angle)
-
-    def mutate(self):
-        return super().mutate()
-
-    def clone(self) -> "Ellipse":
-        return Ellipse(self.color, self.center, self.radii, self.angle)
+# class Ellipse(Shape):
+#     def __init__(self, color: Tuple[int,int,int,int], center: Tuple[int, int], radii: Tuple[int, int], angle: float = 0) -> None:
+#         super().__init__(color)
+#         self.center = center
+#         self.radii = radii
+#         self.angle = angle  # Angle in degrees for rotation
+#
+#     def draw(self, img_draw: ImageDraw.ImageDraw) -> None:
+#         ellipse_width = self.radii[0]*2
+#         ellipse_height = self.radii[1]*2
+#         ellipse_img = Image.new('RGBA', (ellipse_width, ellipse_height), (0, 0, 0, 0))
+#         ellipse_draw = ImageDraw.Draw(ellipse_img)
+#         ellipse_draw.ellipse([0, 0, ellipse_width, ellipse_height], fill=self.color)
+#         rotated_ellipse = ellipse_img.rotate(self.angle, expand=True)
+#
+#         # Paste the rotated ellipse onto the original image
+#         corner_coords = (
+#             self.center[0] - rotated_ellipse.size[0] // 2,
+#             self.center[1] - rotated_ellipse.size[1] // 2
+#         )
+#         img_draw.bitmap(corner_coords, rotated_ellipse, fill=self.color)
+#
+#     @classmethod
+#     def random(cls, img_size: Tuple[int, int]) -> "Ellipse":
+#         color = (randint(0, 255), randint(0, 255), randint(0, 255), randint(0, 255))
+#         center = (randint(0, img_size[0]), randint(0, img_size[1]))
+#         radii = (randint(0, img_size[0] // 2), randint(0, img_size[1] // 2))
+#         angle = randint(0, 360)
+#
+#         return Ellipse(color, center, radii, angle)
+#
+#     def mutate(self):
+#         return super().mutate()
+#
+#     def clone(self) -> "Ellipse":
+#         return Ellipse(self.color, self.center, self.radii, self.angle)

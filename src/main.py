@@ -22,13 +22,15 @@ def main(iters: int):
         # print(f"Pop: {len(gen.individuals)}, il: {len(fittest.shapes)}")
         iters -= 1
 
-import cProfile
-import pstats
+main(1000)
 
-with cProfile.Profile() as pr:
-    main(10)
-
-stats = pstats.Stats(pr)
-stats.strip_dirs()
-stats.sort_stats(pstats.SortKey.TIME)
-stats.print_stats(20)  # top 20 time-consuming calls
+# import cProfile
+# import pstats
+#
+# with cProfile.Profile() as pr:
+#     main(10)
+#
+# stats = pstats.Stats(pr)
+# stats.strip_dirs()
+# stats.sort_stats(pstats.SortKey.TIME)
+# stats.print_stats(20)  # top 20 time-consuming calls

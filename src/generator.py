@@ -7,7 +7,7 @@ import random
 
 from PIL import Image, ImageChops
 
-from genes import Ellipse, Shape, Square, Triangle
+from genes import Shape, Square, Triangle
 from individual import Individual
 
 class ShapeType(Enum):
@@ -21,8 +21,8 @@ class Generator:
         self.shape_count = shape_count
         if shape_type == ShapeType.TRIANGLE:
             self.shape = Triangle
-        if shape_type == ShapeType.ELLIPSE:
-            self.shape = Ellipse
+        # if shape_type == ShapeType.ELLIPSE:
+        #     self.shape = Ellipse
         if shape_type == ShapeType.SQUARE:
             self.shape = Square
 
