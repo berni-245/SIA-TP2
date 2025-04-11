@@ -1,6 +1,9 @@
 from enum import Enum
+from math import ceil
+from utils import randint
 from typing import List
 import numpy as np
+import random
 
 from PIL import Image, ImageChops
 
@@ -23,6 +26,9 @@ class Generator:
         if shape_type == ShapeType.SQUARE:
             self.shape = Square
 
+        self.generation = 0
+        self.population = initial_pop
+
         self.individuals: List[Individual] = []
 
         for _ in range(0, initial_pop):
@@ -32,12 +38,84 @@ class Generator:
             individual = Individual(shapes, og_img.size)
             self.individuals.append(individual)
 
-    # Value closer to 0 is more similar.
-    def fitness(self, individual: Individual) -> np.double:
+    @property
+    def fittest(self) -> Individual:
+        return max(self.individuals, key=self.fitness)
+
+    def fitness(self, individual: Individual) -> float:
+        """
+        Calculate the fitness of an individual by comparing its image to the original image.
+
+        @param `individual: Individual`: The individual whose fitness is to be evaluated.
+        @returns `np.double`: A value in the range (0, 1], with 1 representing a perfect match.
+        """
         if individual.img.size != self.og_img.size:
             raise ValueError("Images must have the same dimensions.")
 
         diff = ImageChops.difference(individual.img, self.og_img)
         np_diff = np.array(diff)
 
-        return np.mean(np_diff)
+        individual.set_fitness(float(1 / (np.mean(np_diff) + 1)))
+        return individual.fitness
+
+    def _elite_selection_individual_amount(self, selection_count: int, individual_idx: int) -> int:
+        return ceil((selection_count - individual_idx)/self.population)
+
+    def elite_selection(self, selection_count: int) -> List[Individual]:
+        self.individuals.sort(key=self.fitness, reverse=True)
+        selected = []
+        for i in range(0, self.population):
+            count = self._elite_selection_individual_amount(selection_count, i)
+            # WARNING: individuals in `selected` will be references to the originals.
+            selected.extend([self.individuals[i]] * count)
+
+        return selected
+
+    def two_point_crossover(self, selection: List[Individual], child_count: int) -> List[Individual]:
+        children: List[Individual] = []
+        for _ in range(0, child_count):
+            # Note that both parents could be the same individual, not sure if this is correct...
+            parent1 = selection[randint(0, len(selection))]
+            parent2 = selection[randint(0, len(selection))]
+            # print(f"p1l: {len(parent1.shapes)}, p2l: {len(parent2.shapes)}")
+            l1 = randint(0, parent1.shape_count)
+            l2 = randint(l1, parent1.shape_count)
+            # print(f"l1: {l1}, l2: {l2}")
+
+            child_genes = parent1.shapes[:l1] + parent2.shapes[l1:l2] + parent1.shapes[l2:]
+            # Make sure that the shapes in the child are copies, not references.
+            # Necessary so during mutation we don't mutate the parents' genes too.
+            child_genes = [shape.clone() for shape in child_genes]
+            # print(f"cgl: {len(child_genes)}")
+            children.append(Individual(child_genes, self.og_img.size))
+
+        return children
+
+    def uniform_mutation(self, children: List[Individual], mutation_probability: float):
+        for c in children:
+            for s in c.shapes:
+                if random.random() < mutation_probability:
+                    s.mutate()
+
+    def new_generation_young_bias(self, selection: List[Individual], children: List[Individual]):
+        if (len(children) <= self.population):
+            new_gen = children
+            self.uniform_mutation(new_gen, 0.8)
+            if len(children) < self.population:
+                # chosen_parents = random.sample(self.individuals, self.population - len(children))
+                chosen_parents = random.choices(selection, k = self.population - len(children))
+                new_gen.extend(chosen_parents)
+        else:
+            new_gen = random.sample(children, self.population)
+            self.uniform_mutation(new_gen, 0.8)
+
+        self.individuals = new_gen
+        self.generation += 1
+
+
+    # The idea would be to somehow pass as parameter which selection, crossover and mutation
+    # methods we want to use.
+    def new_generation(self, selection_count: int, child_count: int):
+        selection = self.elite_selection(selection_count)
+        chilren = self.two_point_crossover(selection, child_count)
+        self.new_generation_young_bias(selection, chilren)

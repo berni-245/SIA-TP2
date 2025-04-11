@@ -18,3 +18,5 @@ class Individual:
             # Use alpha_composite to layer the shape on top of the existing image
             self.img = Image.alpha_composite(self.img, shape_layer)
 
+    def set_fitness(self, fitness: float):
+        self.fitness = fitness
