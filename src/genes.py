@@ -2,6 +2,7 @@ import random
 from typing import Tuple
 from abc import ABC, abstractmethod
 from PIL import ImageDraw
+from PIL import Image
 
 class Shape(ABC):
     def __init__(self, color: Tuple[int,int,int,int]) -> None:
@@ -62,22 +63,32 @@ class Square(Polygon):
         return Square(color, ((x1, y1), (x2, y2), (x3, y3), (x4, y4)))
 
 class Ellipse(Shape):
-    def __init__(self, color: Tuple[int,int,int,int], top_left: Tuple[int, int], bottom_right: Tuple[int, int]) -> None:
+    def __init__(self, color: Tuple[int,int,int,int], center: Tuple[int, int], radii: Tuple[int, int], angle: float = 0) -> None:
         super().__init__(color)
-        self.top_left = top_left
-        self.bottom_right = bottom_right
+        self.center = center
+        self.radii = radii
+        self.angle = angle  # Angle in degrees for rotation
 
     def draw(self, img_draw: ImageDraw.ImageDraw) -> None:
-        img_draw.ellipse([*self.top_left, *self.bottom_right], fill=self.color)
+        ellipse_width = self.radii[0]*2
+        ellipse_height = self.radii[1]*2
+        ellipse_img = Image.new('RGBA', (ellipse_width, ellipse_height), (0, 0, 0, 0))
+        ellipse_draw = ImageDraw.Draw(ellipse_img)
+        ellipse_draw.ellipse([0, 0, ellipse_width, ellipse_height], fill=self.color)
+        rotated_ellipse = ellipse_img.rotate(self.angle, expand=True)
+
+        # Paste the rotated ellipse onto the original image
+        corner_coords = (
+            self.center[0] - rotated_ellipse.size[0] // 2,
+            self.center[1] - rotated_ellipse.size[1] // 2
+        )
+        img_draw.bitmap(corner_coords, rotated_ellipse, fill=self.color)
 
     @classmethod
     def random(cls, img_size: Tuple[int, int]) -> "Ellipse":
         color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-        x1 = random.randint(0, img_size[0] // 2)
-        y1 = random.randint(0, img_size[1] // 2)
-        # Ensure bottom-right is to the right and bottom of top-left
-        x2 = random.randint(x1, img_size[0])
-        y2 = random.randint(y1, img_size[1])
+        center = (random.randint(0, img_size[0]), random.randint(0, img_size[1]))
+        radii = (random.randint(0, img_size[0] // 2), random.randint(0, img_size[1] // 2))
+        angle = random.randint(0, 360)
         
-        return Ellipse(color, (x1, y1), (x2, y2))
-
+        return Ellipse(color, center, radii, angle)
