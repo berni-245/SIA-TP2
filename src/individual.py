@@ -1,10 +1,13 @@
 from typing import List, Tuple
-from PIL import Image, ImageDraw
+from PIL import Image
 from genes import Shape
 import cairo
 
 class Individual:
+    id = 0
     def __init__(self, shapes: List[Shape], img_size: Tuple[int, int]) -> None:
+        self.id = Individual.id
+        Individual.id += 1
         self.shapes = shapes
         self.shape_count = len(shapes)
 
@@ -32,3 +35,6 @@ class Individual:
         # Pillow expects RGBA, so we need to rearrange channels
         img = Image.frombuffer("RGBA", (width, height), buf, "raw", "BGRA", 0, 1)
         return img.copy()  # Copy to detach from Cairo's memory
+
+    def __str__(self) -> str:
+        return str(self.id)

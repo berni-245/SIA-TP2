@@ -4,12 +4,12 @@ from generator import Generator, ShapeType
 reference_img = Image.open("./assets/starry-night.png").convert("RGBA")
 
 def main(iters: int):
-    gen = Generator(reference_img, 100, ShapeType.TRIANGLE, 30)
+    gen = Generator(reference_img, 100, ShapeType.TRIANGLE, 50)
     # for i, ind in enumerate(gen.individuals):
     #     ind.img.save(f"./generated/gen{gen.generation:02}/ind-{i:02}.png")
     last_fitness_check = 0
     while (last_fitness_check < 0.9 and iters > 0):
-        gen.new_generation(5, 27)
+        gen.new_generation(20, 30)
         fittest = gen.fittest
         if (fittest.fitness - last_fitness_check > 0.01):
             last_fitness_check = fittest.fitness
@@ -18,7 +18,8 @@ def main(iters: int):
         # for i, ind in enumerate(gen.individuals):
         #     ind.img.save(f"./generated/gen{gen.generation:02}/ind-{i:02}.png")
 
-        print(f"Gen {gen.generation:03} - Fitness: {fittest.fitness}")
+        print(f"Gen {gen.generation:03} - Ind: {fittest.id} - Fitness: {fittest.fitness}")
+        print(', '.join(str(ind) for ind in gen.individuals))
         # print(f"Pop: {len(gen.individuals)}, il: {len(fittest.shapes)}")
         iters -= 1
 

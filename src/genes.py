@@ -65,7 +65,7 @@ class Polygon(Shape):
     def mutate(self):
         super().mutate()
         # Max change in vertex position
-        delta = 200
+        delta = 50
 
         new_vertices = tuple(
             (v[0] + randint(-delta, delta), v[1] + randint(-delta, delta))
@@ -84,11 +84,15 @@ class Triangle(Polygon):
     @classmethod
     def random(cls, img_size: Tuple[int,int]) -> "Triangle":
         color = (randint(0, 255), randint(0, 255), randint(0, 255), randint(0, 255))
-        size_lim = 100
-        delta = rand_vertex(img_size)
-        x1, y1 = sum_vec(rand_vertex((size_lim, size_lim)), delta)
-        x2, y2 = sum_vec(rand_vertex((size_lim, size_lim)), delta)
-        x3, y3 = sum_vec(rand_vertex((size_lim, size_lim)), delta)
+        # size_lim = 100
+        # delta = rand_vertex(img_size)
+        # x1, y1 = sum_vec(rand_vertex((size_lim, size_lim)), delta)
+        # x2, y2 = sum_vec(rand_vertex((size_lim, size_lim)), delta)
+        # x3, y3 = sum_vec(rand_vertex((size_lim, size_lim)), delta)
+
+        x1, y1 = rand_vertex(img_size)
+        x2, y2 = rand_vertex(img_size)
+        x3, y3 = rand_vertex(img_size)
         
         return Triangle(color, ((x1, y1), (x2, y2), (x3, y3)))
 
