@@ -7,12 +7,9 @@ import numpy as np
 import random
 
 from PIL import Image, ImageChops
-from traitlets import Float
 
 from genes import Shape, Square, Triangle
 from individual import Individual
-
-import sys
 
 class ShapeType(Enum):
     TRIANGLE = "Triangle"
