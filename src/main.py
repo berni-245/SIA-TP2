@@ -18,8 +18,7 @@ def main(iters: int):
         # for i, ind in enumerate(gen.individuals):
         #     ind.img.save(f"./generated/gen{gen.generation:02}/ind-{i:02}.png")
 
-        print(f"Gen {gen.generation:03} - Ind: {fittest.id} - Fitness: {fittest.fitness}")
-        print(', '.join(str(ind) for ind in gen.individuals))
+        print(f"Gen {gen.generation:03} - Fitness: {fittest.fitness}")
         # print(f"Pop: {len(gen.individuals)}, il: {len(fittest.shapes)}")
         iters -= 1
 

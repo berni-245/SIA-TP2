@@ -1,12 +1,13 @@
+import random
 from typing import Tuple
 from abc import ABC, abstractmethod
 from utils import rand_vertex, randfloat, randint, clamp
 import cairo
 
 class Shape(ABC):
-    def __init__(self, color: Tuple[float,float,float,float], img_size: Tuple[int, int]) -> None:
+    def __init__(self, color: Tuple[float,float,float,float]) -> None:
         self.color = color
-        self.img_size = img_size
+        self._multiplier = 1
 
     @abstractmethod
     def draw(self, ctx: cairo.Context):
@@ -22,10 +23,15 @@ class Shape(ABC):
     def random_color() -> Tuple[float,float,float,float]:
         return (randfloat(0, 1), randfloat(0, 1), randfloat(0, 1), randfloat(0, 1))
 
+    def _set_multiplier(self, val: int):
+        self._multiplier = val
+
     @abstractmethod
-    def mutate(self):
+    def mutate(self, img_size: Tuple[int, int], multiplier_chance: float):
+        if random.random() < multiplier_chance:
+            self._set_multiplier(3)
         # Max change in color channel
-        delta = 20/255
+        delta = 20/255 * self._multiplier
 
         new_color = (
             clamp(0, self.color[0] + randfloat(-delta, delta), 1),
@@ -43,8 +49,8 @@ class Shape(ABC):
         pass
 
 class Polygon(Shape):
-    def __init__(self, color: Tuple[float,float,float,float], img_size: Tuple[int, int], vertices: Tuple[Tuple[int,int], ...]) -> None:
-        super().__init__(color, img_size)
+    def __init__(self, color: Tuple[float,float,float,float], vertices: Tuple[Tuple[int,int], ...]) -> None:
+        super().__init__(color)
         self.vertices = vertices
 
     def draw(self, ctx: cairo.Context):
@@ -57,14 +63,14 @@ class Polygon(Shape):
         ctx.close_path()
         ctx.fill()
 
-    def mutate(self):
-        super().mutate()
+    def mutate(self, img_size: Tuple[int, int], multiplier_chance: float):
+        super().mutate(img_size, multiplier_chance)
         # Max change in vertex position
-        delta = 50
+        delta = ((img_size[0] + img_size[1])//(2*10)) * self._multiplier
 
         new_vertices = tuple(
-            (clamp(0, v[0] + randint(-delta, delta), self.img_size[0]),
-             clamp(0, v[1] + randint(-delta, delta), self.img_size[1]))
+            (clamp(0, v[0] + randint(-delta, delta), img_size[0]),
+             clamp(0, v[1] + randint(-delta, delta), img_size[1]))
             for v in self.vertices
         )
         self.vertices = new_vertices
@@ -73,8 +79,8 @@ class Polygon(Shape):
         return f"{{c: {self.color}, v: {self.vertices}}}"
 
 class Triangle(Polygon):
-    def __init__(self, color: Tuple[float,float,float,float], img_size: Tuple[int, int], vertices: Tuple[Tuple[int,int], Tuple[int,int], Tuple[int,int]]) -> None:
-        super().__init__(color, img_size, vertices)
+    def __init__(self, color: Tuple[float,float,float,float], vertices: Tuple[Tuple[int,int], Tuple[int,int], Tuple[int,int]]) -> None:
+        super().__init__(color, vertices)
         self.vertices = vertices
 
     @staticmethod
@@ -90,16 +96,15 @@ class Triangle(Polygon):
         x2, y2 = rand_vertex(img_size)
         x3, y3 = rand_vertex(img_size)
         
-        return Triangle(color, img_size, ((x1, y1), (x2, y2), (x3, y3)))
+        return Triangle(color, ((x1, y1), (x2, y2), (x3, y3)))
 
     def clone(self) -> "Triangle":
-        return Triangle(self.color, self.img_size, self.vertices)
+        return Triangle(self.color, self.vertices)
 
 class Square(Polygon):
     def __init__(
         self,
         color: Tuple[float,float,float,float],
-        img_size: Tuple[int, int],
         vertices: Tuple[
             Tuple[int,int],
             Tuple[int,int],
@@ -107,7 +112,7 @@ class Square(Polygon):
             Tuple[int,int],
         ]
     ) -> None:
-        super().__init__(color, img_size, vertices)
+        super().__init__(color, vertices)
         self.vertices = vertices
 
     @staticmethod
@@ -118,10 +123,10 @@ class Square(Polygon):
         x2, y2 = (x3, y1)
         x4, y4 = (x1, y3)
         
-        return Square(color, img_size, ((x1, y1), (x2, y2), (x3, y3), (x4, y4)))
+        return Square(color, ((x1, y1), (x2, y2), (x3, y3), (x4, y4)))
 
     def clone(self) -> "Square":
-        return Square(self.color, self.img_size, self.vertices)
+        return Square(self.color, self.vertices)
 
 # class Ellipse(Shape):
 #     def __init__(self, color: Tuple[float,float,float,float], center: Tuple[int, int], radii: Tuple[int, int], angle: float = 0) -> None:

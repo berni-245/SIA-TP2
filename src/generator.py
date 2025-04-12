@@ -39,9 +39,15 @@ class Generator:
             individual = Individual(shapes, og_img.size)
             self.individuals.append(individual)
 
+    def _fittest_sort(self, individual: Individual) -> float:
+        if individual.fitness < 0:
+            return self.fitness(individual)
+        else:
+            return individual.fitness
+
     @property
     def fittest(self) -> Individual:
-        return max(self.individuals, key=self.fitness)
+        return max(self.individuals, key=self._fittest_sort)
 
     def fitness(self, individual: Individual) -> float:
         """
@@ -78,10 +84,8 @@ class Generator:
             # Note that both parents could be the same individual, not sure if this is correct...
             parent1 = selection[randint(0, len(selection))]
             parent2 = selection[randint(0, len(selection))]
-            # print(f"p1l: {len(parent1.shapes)}, p2l: {len(parent2.shapes)}")
             l1 = randint(0, parent1.shape_count)
             l2 = randint(l1, parent1.shape_count)
-            # print(f"l1: {l1}, l2: {l2}")
 
             child_genes1 = parent1.shapes[:l1] + parent2.shapes[l1:l2] + parent1.shapes[l2:]
             child_genes2 = parent2.shapes[:l1] + parent1.shapes[l1:l2] + parent2.shapes[l2:]
@@ -89,7 +93,6 @@ class Generator:
             # Necessary so during mutation we don't mutate the parents' genes too.
             child_genes1 = [shape.clone() for shape in child_genes1]
             child_genes2 = [shape.clone() for shape in child_genes2]
-            # print(f"cgl: {len(child_genes)}")
             children.append(Individual(child_genes1, self.og_img.size))
             children.append(Individual(child_genes2, self.og_img.size))
 
@@ -99,7 +102,7 @@ class Generator:
         for c in children:
             for s in c.shapes:
                 if random.random() < mutation_probability:
-                    s.mutate()
+                    s.mutate(self.og_img.size, 0.5)
 
     def new_generation_young_bias(self, selection: List[Individual], children: List[Individual]):
         if (len(children) <= self.population):
@@ -116,14 +119,6 @@ class Generator:
         self.individuals = new_gen
         self.generation += 1
 
-
-    # The idea would be to somehow pass as parameter which selection, crossover and mutation
-    # methods we want to use.
-    def new_generation(self, selection_count: int, child_count: int):
-        selection = self.elite_selection(selection_count)
-        chilren = self.two_point_crossover(selection, child_count)
-        self.new_generation_young_bias(selection, chilren)
-    
     def trad_generational_jump(self):
         individuals_size = len(self.individuals)
 
@@ -134,34 +129,41 @@ class Generator:
             individual = Individual(shapes, self.og_img.size)
             self.individuals.append(individual)
 
-        self.individuals = self.universal_selection(self.individuals, individuals_size)
+        self.individuals = self.universal_selection(individuals_size)
         
-    def universal_selection(self, individuals: List[Individual], child_amount: int) -> List[Individual]:
+    def universal_selection(self, child_amount: int) -> List[Individual]:
         rand_values = []
         for j in range(child_amount):
             rand_val = random.uniform(0, 1)
             rand_values.append((rand_val + j) / child_amount)
-        return self._get_roulette_selection(individuals, rand_values)
+        return self._get_roulette_selection(rand_values)
         
-    def roulette_selection(self, individuals: List[Individual], child_amout: int) -> List[Individual]:
-        return self._get_roulette_selection(individuals, [random.uniform(0, 1) for _ in range(child_amout)])
+    def roulette_selection(self, child_amout: int) -> List[Individual]:
+        return self._get_roulette_selection([random.uniform(0, 1) for _ in range(child_amout)])
 
-    def _get_roulette_selection(self, individuals: List[Individual], rand_values: List[float]) -> List[Individual]:
+    def _get_roulette_selection(self, rand_values: List[float]) -> List[Individual]:
         fitness_sum = np.sum([self.fitness(ind) for ind in self.individuals])
 
         accum_relative_fitness = []
         current_rel_fit = 0
-        for i, ind in enumerate(individuals):
+        for i, ind in enumerate(self.individuals):
             current_rel_fit += ind.fitness / fitness_sum
-            accum_relative_fitness.append(1 if (i+1) == len(individuals) else current_rel_fit)
+            accum_relative_fitness.append(1 if (i+1) == len(self.individuals) else current_rel_fit)
 
         to_return = []
         for rand_val in rand_values:
             left_range = 0
-            for ind, rel_fit in zip(individuals, accum_relative_fitness):
+            for ind, rel_fit in zip(self.individuals, accum_relative_fitness):
                 right_range = rel_fit
                 if left_range < rand_val and rand_val <= right_range:
                     to_return.append(ind)
                     break
                 left_range = rel_fit
         return to_return
+
+    # The idea would be to somehow pass as parameter which selection, crossover and mutation
+    # methods we want to use.
+    def new_generation(self, selection_count: int, child_count: int):
+        selection = self.elite_selection(selection_count)
+        chilren = self.two_point_crossover(selection, child_count)
+        self.new_generation_young_bias(selection, chilren)
