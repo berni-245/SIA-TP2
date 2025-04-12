@@ -15,21 +15,18 @@ class Individual:
         # Create a transparent Cairo surface
         self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
         ctx = cairo.Context(self.surface)
-
         for shape in self.shapes:
             shape.draw(ctx)
 
-        # Convert Cairo surface to PIL Image for fitness calculations
-        self.img = self.cairo_to_pil(self.surface)
+        self.img = self.cairo_to_img()
 
     def set_fitness(self, fitness: float):
         self.fitness = fitness
 
-    @staticmethod
-    def cairo_to_pil(surface: cairo.ImageSurface) -> Image.Image:
-        buf = surface.get_data()
-        width = surface.get_width()
-        height = surface.get_height()
+    def cairo_to_img(self) -> Image.Image:
+        buf = self.surface.get_data()
+        width = self.surface.get_width()
+        height = self.surface.get_height()
 
         # Cairo uses ARGB32 (BGRA in memory on little endian systems)
         # Pillow expects RGBA, so we need to rearrange channels

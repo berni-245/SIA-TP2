@@ -7,7 +7,13 @@ def randint(min: int, max: int) -> int:
     """
     return random.randint(min, max - 1)
 
-def clamp(min_val, x, max_val):
+def randfloat(min: float, max: float) -> float:
+    """
+    Return random float in range `[min, max)`.
+    """
+    return min + (max - min) * random.random()
+
+def clamp(min_val: float, x: float, max_val: float) -> float:
     return max(min_val, min(max_val, x))
 
 def rand_vertex(lims: Tuple[int, int]):

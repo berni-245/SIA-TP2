@@ -1,12 +1,10 @@
 from typing import Tuple
 from abc import ABC, abstractmethod
-from PIL import ImageDraw
-from PIL import Image
-from utils import rand_vertex, randint, clamp, sum_vec
+from utils import rand_vertex, randfloat, randint, clamp
 import cairo
 
 class Shape(ABC):
-    def __init__(self, color: Tuple[int,int,int,int], img_size: Tuple[int, int]) -> None:
+    def __init__(self, color: Tuple[float,float,float,float], img_size: Tuple[int, int]) -> None:
         self.color = color
         self.img_size = img_size
 
@@ -14,22 +12,26 @@ class Shape(ABC):
     def draw(self, ctx: cairo.Context):
         pass
 
-    @classmethod
+    @staticmethod
     @abstractmethod
     # Return type should be of the same class (Shape or its subclass)
-    def random(cls, img_size: Tuple[int, int]) -> "Shape":
+    def random(img_size: Tuple[int,int]) -> "Shape":
         pass
+
+    @staticmethod
+    def random_color() -> Tuple[float,float,float,float]:
+        return (randfloat(0, 1), randfloat(0, 1), randfloat(0, 1), randfloat(0, 1))
 
     @abstractmethod
     def mutate(self):
         # Max change in color channel
-        delta = 20
+        delta = 20/255
 
-        new_color:  Tuple[int,int,int,int] = (
-            clamp(0, self.color[0] + randint(-delta, delta), 255),
-            clamp(0, self.color[1] + randint(-delta, delta), 255),
-            clamp(0, self.color[2] + randint(-delta, delta), 255),
-            clamp(0, self.color[3] + randint(-delta, delta), 255),
+        new_color = (
+            clamp(0, self.color[0] + randfloat(-delta, delta), 1),
+            clamp(0, self.color[1] + randfloat(-delta, delta), 1),
+            clamp(0, self.color[2] + randfloat(-delta, delta), 1),
+            clamp(0, self.color[3] + randfloat(-delta, delta), 1),
         )
         self.color = new_color
 
@@ -41,25 +43,17 @@ class Shape(ABC):
         pass
 
 class Polygon(Shape):
-    def __init__(self, color: Tuple[int,int,int,int], vertices: Tuple[Tuple[int,int], ...], img_size: Tuple[int, int]) -> None:
+    def __init__(self, color: Tuple[float,float,float,float], img_size: Tuple[int, int], vertices: Tuple[Tuple[int,int], ...]) -> None:
         super().__init__(color, img_size)
         self.vertices = vertices
 
     def draw(self, ctx: cairo.Context):
-        # Normalize RGBA to 0–1
-        r, g, b, a = [c / 255.0 for c in self.color]
+        ctx.set_source_rgba(*self.color)
 
-        # Set color with alpha
-        ctx.set_source_rgba(r, g, b, a)
-
-        # Move to first point
         ctx.move_to(*self.vertices[0])
-
-        # Draw lines to other points
         for point in self.vertices[1:]:
             ctx.line_to(*point)
 
-        # Close the triangle and fill
         ctx.close_path()
         ctx.fill()
 
@@ -79,13 +73,13 @@ class Polygon(Shape):
         return f"{{c: {self.color}, v: {self.vertices}}}"
 
 class Triangle(Polygon):
-    def __init__(self, color: Tuple[int,int,int,int], vertices: Tuple[Tuple[int,int], Tuple[int,int], Tuple[int,int]], img_size: Tuple[int, int]) -> None:
-        super().__init__(color, vertices, img_size)
+    def __init__(self, color: Tuple[float,float,float,float], img_size: Tuple[int, int], vertices: Tuple[Tuple[int,int], Tuple[int,int], Tuple[int,int]]) -> None:
+        super().__init__(color, img_size, vertices)
         self.vertices = vertices
 
-    @classmethod
-    def random(cls, img_size: Tuple[int,int]) -> "Triangle":
-        color = (randint(0, 255), randint(0, 255), randint(0, 255), randint(0, 255))
+    @staticmethod
+    def random(img_size: Tuple[int,int]) -> "Triangle":
+        color = Shape.random_color()
         # size_lim = 100
         # delta = rand_vertex(img_size)
         # x1, y1 = sum_vec(rand_vertex((size_lim, size_lim)), delta)
@@ -96,39 +90,41 @@ class Triangle(Polygon):
         x2, y2 = rand_vertex(img_size)
         x3, y3 = rand_vertex(img_size)
         
-        return Triangle(color, ((x1, y1), (x2, y2), (x3, y3)), img_size)
+        return Triangle(color, img_size, ((x1, y1), (x2, y2), (x3, y3)))
 
     def clone(self) -> "Triangle":
-        return Triangle(self.color, self.vertices, self.img_size)
+        return Triangle(self.color, self.img_size, self.vertices)
 
 class Square(Polygon):
     def __init__(
-            self,
-            color: Tuple[int,int,int,int],
-            vertices: Tuple[Tuple[int,int],
+        self,
+        color: Tuple[float,float,float,float],
+        img_size: Tuple[int, int],
+        vertices: Tuple[
             Tuple[int,int],
             Tuple[int,int],
-            Tuple[int,int]],
-            img_size: Tuple[int, int]
+            Tuple[int,int],
+            Tuple[int,int],
+        ]
     ) -> None:
-        super().__init__(color, vertices, img_size)
+        super().__init__(color, img_size, vertices)
         self.vertices = vertices
 
-    @classmethod
-    def random(cls, img_size: Tuple[int, int]) -> "Square":
-        color = (randint(0, 255), randint(0, 255), randint(0, 255), randint(0, 255))
+    @staticmethod
+    def random(img_size: Tuple[int,int]) -> "Square":
+        color = Shape.random_color()
         x1, y1 = randint(0, img_size[0]), randint(0, img_size[1])
         x3, y3 = randint(0, img_size[0]), randint(0, img_size[1])
         x2, y2 = (x3, y1)
         x4, y4 = (x1, y3)
         
-        return Square(color, ((x1, y1), (x2, y2), (x3, y3), (x4, y4)), img_size)
+        return Square(color, img_size, ((x1, y1), (x2, y2), (x3, y3), (x4, y4)))
 
     def clone(self) -> "Square":
-        return Square(self.color, self.vertices, self.img_size)
+        return Square(self.color, self.img_size, self.vertices)
 
 # class Ellipse(Shape):
-#     def __init__(self, color: Tuple[int,int,int,int], center: Tuple[int, int], radii: Tuple[int, int], angle: float = 0) -> None:
+#     def __init__(self, color: Tuple[float,float,float,float], center: Tuple[int, int], radii: Tuple[int, int], angle: float = 0) -> None:
 #         super().__init__(color)
 #         self.center = center
 #         self.radii = radii
@@ -149,9 +145,9 @@ class Square(Polygon):
 #         )
 #         img_draw.bitmap(corner_coords, rotated_ellipse, fill=self.color)
 #
-#     @classmethod
+#     @staticmethod
 #     def random(cls, img_size: Tuple[int, int]) -> "Ellipse":
-#         color = (randint(0, 255), randint(0, 255), randint(0, 255), randint(0, 255))
+#         color = Shape.random_color()
 #         center = (randint(0, img_size[0]), randint(0, img_size[1]))
 #         radii = (randint(0, img_size[0] // 2), randint(0, img_size[1] // 2))
 #         angle = randint(0, 360)
