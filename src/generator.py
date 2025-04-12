@@ -136,8 +136,6 @@ class Generator:
 
         self.individuals = self.universal_selection(self.individuals, individuals_size)
         
-
-    
     def universal_selection(self, individuals: List[Individual], child_amount: int) -> List[Individual]:
         rand_values = []
         for j in range(child_amount):
@@ -147,7 +145,6 @@ class Generator:
         
     def roulette_selection(self, individuals: List[Individual], child_amout: int) -> List[Individual]:
         return self._get_roulette_selection(individuals, [random.uniform(0, 1) for _ in range(child_amout)])
-
 
     def _get_roulette_selection(self, individuals: List[Individual], rand_values: List[float]) -> List[Individual]:
         fitness_sum = np.sum([self.fitness(ind) for ind in self.individuals])
