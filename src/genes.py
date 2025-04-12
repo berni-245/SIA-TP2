@@ -6,8 +6,9 @@ from utils import rand_vertex, randint, clamp, sum_vec
 import cairo
 
 class Shape(ABC):
-    def __init__(self, color: Tuple[int,int,int,int]) -> None:
+    def __init__(self, color: Tuple[int,int,int,int], img_size: Tuple[int, int]) -> None:
         self.color = color
+        self.img_size = img_size
 
     @abstractmethod
     def draw(self, ctx: cairo.Context):
@@ -40,8 +41,8 @@ class Shape(ABC):
         pass
 
 class Polygon(Shape):
-    def __init__(self, color: Tuple[int,int,int,int], vertices: Tuple[Tuple[int,int], ...]) -> None:
-        super().__init__(color)
+    def __init__(self, color: Tuple[int,int,int,int], vertices: Tuple[Tuple[int,int], ...], img_size: Tuple[int, int]) -> None:
+        super().__init__(color, img_size)
         self.vertices = vertices
 
     def draw(self, ctx: cairo.Context):
@@ -68,7 +69,8 @@ class Polygon(Shape):
         delta = 50
 
         new_vertices = tuple(
-            (v[0] + randint(-delta, delta), v[1] + randint(-delta, delta))
+            (clamp(0, v[0] + randint(-delta, delta), self.img_size[0]),
+             clamp(0, v[1] + randint(-delta, delta), self.img_size[1]))
             for v in self.vertices
         )
         self.vertices = new_vertices
@@ -77,8 +79,8 @@ class Polygon(Shape):
         return f"{{c: {self.color}, v: {self.vertices}}}"
 
 class Triangle(Polygon):
-    def __init__(self, color: Tuple[int,int,int,int], vertices: Tuple[Tuple[int,int], Tuple[int,int], Tuple[int,int]]) -> None:
-        super().__init__(color, vertices)
+    def __init__(self, color: Tuple[int,int,int,int], vertices: Tuple[Tuple[int,int], Tuple[int,int], Tuple[int,int]], img_size: Tuple[int, int]) -> None:
+        super().__init__(color, vertices, img_size)
         self.vertices = vertices
 
     @classmethod
@@ -94,10 +96,10 @@ class Triangle(Polygon):
         x2, y2 = rand_vertex(img_size)
         x3, y3 = rand_vertex(img_size)
         
-        return Triangle(color, ((x1, y1), (x2, y2), (x3, y3)))
+        return Triangle(color, ((x1, y1), (x2, y2), (x3, y3)), img_size)
 
     def clone(self) -> "Triangle":
-        return Triangle(self.color, self.vertices)
+        return Triangle(self.color, self.vertices, self.img_size)
 
 class Square(Polygon):
     def __init__(
@@ -106,9 +108,10 @@ class Square(Polygon):
             vertices: Tuple[Tuple[int,int],
             Tuple[int,int],
             Tuple[int,int],
-            Tuple[int,int]]
+            Tuple[int,int]],
+            img_size: Tuple[int, int]
     ) -> None:
-        super().__init__(color, vertices)
+        super().__init__(color, vertices, img_size)
         self.vertices = vertices
 
     @classmethod
@@ -119,10 +122,10 @@ class Square(Polygon):
         x2, y2 = (x3, y1)
         x4, y4 = (x1, y3)
         
-        return Square(color, ((x1, y1), (x2, y2), (x3, y3), (x4, y4)))
+        return Square(color, ((x1, y1), (x2, y2), (x3, y3), (x4, y4)), img_size)
 
     def clone(self) -> "Square":
-        return Square(self.color, self.vertices)
+        return Square(self.color, self.vertices, self.img_size)
 
 # class Ellipse(Shape):
 #     def __init__(self, color: Tuple[int,int,int,int], center: Tuple[int, int], radii: Tuple[int, int], angle: float = 0) -> None:
