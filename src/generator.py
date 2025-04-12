@@ -62,7 +62,8 @@ class Generator:
         diff = ImageChops.difference(individual.img, self.og_img)
         np_diff = np.array(diff)
 
-        individual.set_fitness(float(1 / (np.mean(np_diff) + 1)))
+        mean = np.mean(np_diff)/255
+        individual.set_fitness(float(1 - mean))
         return individual.fitness
 
     def _elite_selection_individual_amount(self, selection_count: int, individual_idx: int) -> int:
