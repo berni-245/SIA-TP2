@@ -74,7 +74,7 @@ class Generator:
 
     def two_point_crossover(self, selection: List[Individual], child_count: int) -> List[Individual]:
         children: List[Individual] = []
-        for _ in range(0, child_count):
+        for _ in range(0, child_count // 2):
             # Note that both parents could be the same individual, not sure if this is correct...
             parent1 = selection[randint(0, len(selection))]
             parent2 = selection[randint(0, len(selection))]
@@ -83,12 +83,15 @@ class Generator:
             l2 = randint(l1, parent1.shape_count)
             # print(f"l1: {l1}, l2: {l2}")
 
-            child_genes = parent1.shapes[:l1] + parent2.shapes[l1:l2] + parent1.shapes[l2:]
+            child_genes1 = parent1.shapes[:l1] + parent2.shapes[l1:l2] + parent1.shapes[l2:]
+            child_genes2 = parent2.shapes[:l1] + parent1.shapes[l1:l2] + parent2.shapes[l2:]
             # Make sure that the shapes in the child are copies, not references.
             # Necessary so during mutation we don't mutate the parents' genes too.
-            child_genes = [shape.clone() for shape in child_genes]
+            child_genes1 = [shape.clone() for shape in child_genes1]
+            child_genes2 = [shape.clone() for shape in child_genes2]
             # print(f"cgl: {len(child_genes)}")
-            children.append(Individual(child_genes, self.og_img.size))
+            children.append(Individual(child_genes1, self.og_img.size))
+            children.append(Individual(child_genes2, self.og_img.size))
 
         return children
 
