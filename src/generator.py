@@ -120,11 +120,6 @@ class Generator:
         selection = self.elite_selection(selection_count)
         chilren = self.two_point_crossover(selection, child_count)
         self.new_generation_young_bias(selection, chilren)
-
-    def relative_fitness(self, individual: Individual) -> np.double:
-        fitness_arr = [self.fitness(ind) for ind in self.individuals]
-
-        return self.fitness(individual) / np.sum(fitness_arr)
     
     def trad_generational_jump(self):
         individuals_size = len(self.individuals)
@@ -152,10 +147,12 @@ class Generator:
 
 
     def _get_roulette_selection(self, individuals: List[Individual], rand_values: List[float]) -> List[Individual]:
+        fitness_sum = np.sum([self.fitness(ind) for ind in self.individuals])
+
         accum_relative_fitness = []
         current_rel_fit = 0
         for i, ind in enumerate(individuals):
-            current_rel_fit += self.relative_fitness(ind)
+            current_rel_fit += ind.fitness / fitness_sum
             accum_relative_fitness.append(1 if (i+1) == len(individuals) else current_rel_fit)
 
         to_return = []
