@@ -8,11 +8,11 @@ def main(iters: int):
     # for i, ind in enumerate(gen.individuals):
     #     ind.img.save(f"./generated/gen{gen.generation:02}/ind-{i:02}.png")
     last_fitness_check = 0
-    while (last_fitness_check < 0.9):
+    while (last_fitness_check < 0.95):
         gen.new_generation(50)
         fittest = gen.fittest
-        # if (fittest.fitness - last_fitness_check > 0.01):
-            # last_fitness_check = fittest.fitness
+        if (fittest.fitness - last_fitness_check > 0.01):
+            last_fitness_check = fittest.fitness
             # fittest.img.save(f"./generated/fittest-gen-{gen.generation:03}.png")
 
         # for i, ind in enumerate(gen.individuals):

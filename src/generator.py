@@ -153,6 +153,9 @@ class Generator:
                 c.shapes.remove(shape)
                 c.shapes.insert(0, shape)      
 
+    def complete_mutation(self, children: List[Individual]):
+        self.uniform_mutation(children, 1)
+
     def new_generation_young_bias(self, children: List[Individual]):
         if (len(children) <= self.population):
             new_gen = children
@@ -207,5 +210,5 @@ class Generator:
     def new_generation(self, selection_count: int):
         selection = self.elite_selection(selection_count)
         children = self.two_point_crossover(selection)
-        self.uniform_mutation(children, 0.8)
+        self.uniform_mutation(children, 0.15)
         self.new_generation_young_bias(children)
