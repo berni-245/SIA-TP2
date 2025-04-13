@@ -153,32 +153,24 @@ class Generator:
                 c.shapes.remove(shape)
                 c.shapes.insert(0, shape)      
 
-    def new_generation_young_bias(self, selection: List[Individual], children: List[Individual]):
+    def new_generation_young_bias(self, children: List[Individual]):
         if (len(children) <= self.population):
             new_gen = children
-            self.uniform_mutation(new_gen, 0.8)
             if len(children) < self.population:
                 chosen_parents = random.sample(self.individuals, self.population - len(children))
                 # chosen_parents = random.choices(selection, k = self.population - len(children))
                 new_gen.extend(chosen_parents)
         else:
             new_gen = random.sample(children, self.population)
-            self.uniform_mutation(new_gen, 0.8)
 
         self.individuals = new_gen
         self.generation += 1
 
-    def trad_generational_jump(self):
-        individuals_size = len(self.individuals)
-
-        for _ in range(individuals_size):
-            shapes: List[Shape] = []
-            for _ in range(self.shape_count):
-                shapes.append(self.shape.random(self.og_img.size))
-            individual = Individual(shapes, self.og_img.size)
-            self.individuals.append(individual)
-
-        self.individuals = self.universal_selection(individuals_size)
+    def new_generation_trad(self, children: List[Individual]):
+        self.individuals.extend(children)
+        new_gen = random.sample(self.individuals, self.population)
+        self.individuals = new_gen
+        self.generation += 1
         
     def universal_selection(self, child_amount: int) -> List[Individual]:
         rand_values = []
@@ -215,4 +207,5 @@ class Generator:
     def new_generation(self, selection_count: int):
         selection = self.elite_selection(selection_count)
         children = self.two_point_crossover(selection)
-        self.new_generation_young_bias(selection, children)
+        self.uniform_mutation(children, 0.8)
+        self.new_generation_young_bias(children)
