@@ -197,6 +197,7 @@ class Generator:
             else:
                 children.append(chosen_candidates[1])
             child_amount -= 1
+        return children
 
     def ranking_selection(self, child_amount: int) -> List[Individual]:
         self.individuals.sort(key=self.fitness, reverse=True)
