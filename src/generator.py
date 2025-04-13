@@ -1,11 +1,14 @@
 from enum import Enum
 import random
 from math import ceil
+from time import sleep
+
+import colour
 from utils import randint, swap_in_arr
 from typing import List
 import numpy as np
 import random
-
+from skimage.color import rgb2lab
 from PIL import Image, ImageChops
 
 from genes import Shape, Square, Triangle
@@ -19,6 +22,9 @@ class ShapeType(Enum):
 class Generator:
     def __init__(self, og_img: Image.Image, shape_count: int, shape_type: ShapeType, initial_pop: int) -> None:
         self.og_img = og_img
+        # Uncomment the lines below if you want to use the delta_D fitness
+        # rgb = np.asarray(og_img.convert("RGB")) / 255.0
+        # self.lab = rgb2lab(rgb)
         self.shape_count = shape_count
         if shape_type == ShapeType.TRIANGLE:
             self.shape = Triangle
@@ -49,6 +55,21 @@ class Generator:
     def fittest(self) -> Individual:
         return max(self.individuals, key=self._fittest_sort)
 
+# Uncomment the lines below if you want to use the delta_D fitness, you also need to uncomment in the __init__ of generator and individual
+    # def fitness_delta_D(self, individual: Individual) -> float:
+    #     if individual.img.size != self.og_img.size:
+    #         raise ValueError("Images must have the same dimensions.")
+
+        # diff = colour.difference.delta_e.delta_E_CIE1976(self.lab, individual.lab)
+
+        # mean = np.mean(diff)
+        # fitness = 1 - (mean / 100)
+
+        # fitness = max(0.0, min(1.0, float(fitness)))
+
+        # individual.set_fitness(fitness)
+        # return fitness
+    
     def fitness(self, individual: Individual) -> float:
         """
         Calculate the fitness of an individual by comparing its image to the original image.
@@ -115,9 +136,22 @@ class Generator:
 
     def uniform_mutation(self, children: List[Individual], mutation_probability: float):
         for c in children:
+            to_send_to_back = []
+            to_send_to_front = []
             for s in c.shapes:
-                if random.random() < mutation_probability:
+                rand_val = random.random()
+                if rand_val <= mutation_probability / 2: # 50% of mut_prob of changing the shape's properties
                     s.mutate(self.og_img.size, 0.5)
+                elif rand_val <= mutation_probability - mutation_probability/4: # 25% of mut_prob of moving the shape to the back
+                    to_send_to_back.append(s)
+                elif rand_val <= mutation_probability: # 25% of mut_prob of moving the shape to the front
+                    to_send_to_front.append(s)
+            for shape in to_send_to_back:
+                c.shapes.remove(shape)
+                c.shapes.append(shape)
+            for shape in to_send_to_front:
+                c.shapes.remove(shape)
+                c.shapes.insert(0, shape)      
 
     def new_generation_young_bias(self, selection: List[Individual], children: List[Individual]):
         if (len(children) <= self.population):
@@ -178,7 +212,7 @@ class Generator:
 
     # The idea would be to somehow pass as parameter which selection, crossover and mutation
     # methods we want to use.
-    def new_generation(self, selection_count: int, child_count: int):
+    def new_generation(self, selection_count: int):
         selection = self.elite_selection(selection_count)
         children = self.two_point_crossover(selection)
         self.new_generation_young_bias(selection, children)

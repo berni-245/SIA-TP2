@@ -29,19 +29,7 @@ class Shape(ABC):
 
     @abstractmethod
     def mutate(self, img_size: Tuple[int, int], multiplier_chance: float):
-        if random.random() < multiplier_chance:
-            self._set_multiplier(3)
-        # Max change in color channel
-        delta = 20/255 * self._multiplier
-
-        # new_color = (
-        #     clamp(0, self.color[0] + randfloat(-delta, delta), 1),
-        #     clamp(0, self.color[1] + randfloat(-delta, delta), 1),
-        #     clamp(0, self.color[2] + randfloat(-delta, delta), 1),
-        #     clamp(0, self.color[3] + randfloat(-delta, delta), 1),
-        # )
-        # self.color = new_color
-        self.color = Color.get_random_color()
+        pass
 
     @abstractmethod
     def clone(self) -> "Shape":
@@ -66,16 +54,28 @@ class Polygon(Shape):
         ctx.fill()
 
     def mutate(self, img_size: Tuple[int, int], multiplier_chance: float):
-        super().mutate(img_size, multiplier_chance)
-        # Max change in vertex position
-        delta = ((img_size[0] + img_size[1])//(2*10)) * self._multiplier
+        roulette = randint(1, 100)
+        if roulette <= 30: # 30% of changing color
+            delta = 20/255
+            self.color = (
+                clamp(0, self.color[0] + randfloat(-delta, delta), 1),
+                clamp(0, self.color[1] + randfloat(-delta, delta), 1),
+                clamp(0, self.color[2] + randfloat(-delta, delta), 1),
+                self.color[3]
+            )
+        elif roulette <= 40: # 10% of changing to a base color
+            self.color = (*Color.get_random_fixed_color(), self.color[3])
+        elif roulette <= 50: # 10% of changing transparency
+            self.color = (self.color[0], self.color[1], self.color[2], Color.get_random_fixed_transparency())
+        else: # 50% of changing position
+            delta = ((img_size[0] + img_size[1])//(2*10)) * self._multiplier
 
-        new_vertices = tuple(
-            (clamp(0, v[0] + randint(-delta, delta), img_size[0]),
-             clamp(0, v[1] + randint(-delta, delta), img_size[1]))
-            for v in self.vertices
-        )
-        self.vertices = new_vertices
+            new_vertices = tuple(
+                (clamp(0, v[0] + randint(-delta, delta), img_size[0]),
+                    clamp(0, v[1] + randint(-delta, delta), img_size[1]))
+                for v in self.vertices
+            )
+            self.vertices = new_vertices
 
     def __str__(self) -> str:
         return f"{{c: {self.color}, v: {self.vertices}}}"
@@ -87,7 +87,7 @@ class Triangle(Polygon):
 
     @staticmethod
     def random(img_size: Tuple[int,int]) -> "Triangle":
-        color = Color.get_random_color()
+        color = (*Color.get_random_fixed_color(), Color.get_full_transparency())
         # size_lim = 100
         # delta = rand_vertex(img_size)
         # x1, y1 = sum_vec(rand_vertex((size_lim, size_lim)), delta)
@@ -119,7 +119,7 @@ class Square(Polygon):
 
     @staticmethod
     def random(img_size: Tuple[int,int]) -> "Square":
-        color = Color.get_random_color()
+        color = (*Color.get_random_fixed_color(), Color.get_full_transparency())
         x1, y1 = randint(0, img_size[0]), randint(0, img_size[1])
         x3, y3 = randint(0, img_size[0]), randint(0, img_size[1])
         x2, y2 = (x3, y1)
@@ -197,10 +197,18 @@ class Color:
     _fixed_transparency: List[float] = [0.5, 0.75, 1]
 
     @classmethod
-    def get_random_color(cls) -> Tuple[float, float, float, float]:
+    def get_random_fixed_color(cls) -> Tuple[float, float, float]:
         color_idx = randint(0, len(cls._fixed_colors))
-        transparency_idx = randint(0, len(cls._fixed_transparency))
         R, G, B = cls._fixed_colors[color_idx]
-        return (R, G, B, cls._fixed_transparency[transparency_idx])
+        return (R, G, B)
+    
+    @classmethod
+    def get_random_fixed_transparency(cls) -> float:
+        transparency_idx = randint(0, len(cls._fixed_transparency))
+        return cls._fixed_transparency[transparency_idx]
+    
+    @classmethod
+    def get_full_transparency(cls) -> float:
+        return 1
 
     

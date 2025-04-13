@@ -17,7 +17,12 @@ def clamp(min_val: float, x: float, max_val: float) -> float:
     return max(min_val, min(max_val, x))
 
 def rand_vertex(lims: Tuple[int, int]):
-    return (randint(0, lims[0]), randint(0, lims[1]))
+    factor = 10
+    length_divided = lims[0] // factor
+    height_divided = lims[1] // factor
+    x = randint(0, length_divided) * factor
+    y = randint(0, height_divided) * factor
+    return (round(clamp(0, x, lims[0])), round(clamp(0, y, lims[1])))
 
 def sum_vec(v1: Tuple[int, int], v2: Tuple[int, int]):
     return (v1[0] + v2[0], v1[1] + v2[1])

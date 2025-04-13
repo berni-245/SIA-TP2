@@ -1,39 +1,36 @@
 from typing import List, Tuple
 from PIL import Image
-from genes import Shape
+import numpy as np
 import cairo
+from genes import Shape
+from skimage.color import rgb2lab
 
 class Individual:
-    # id = 0
     def __init__(self, shapes: List[Shape], img_size: Tuple[int, int]) -> None:
-        # self.id = Individual.id
-        # Individual.id += 1
         self.shapes = shapes
         self.shape_count = len(shapes)
 
         width, height = img_size
-        # Create a transparent Cairo surface
         self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
         ctx = cairo.Context(self.surface)
+
         for shape in self.shapes:
             shape.draw(ctx)
 
-        self.img = self.cairo_to_img()
-
+        self.img = self._cairo_to_img()
+        # Uncomment the lines below if you want to use the delta_D fitness
+        # rgb = np.asarray(self.img.convert("RGB")) / 255.0
+        # self.lab = rgb2lab(rgb)
         self.fitness = -1
+
 
     def set_fitness(self, fitness: float):
         self.fitness = fitness
 
-    def cairo_to_img(self) -> Image.Image:
+    def _cairo_to_img(self) -> Image.Image:
         buf = self.surface.get_data()
         width = self.surface.get_width()
         height = self.surface.get_height()
 
-        # Cairo uses ARGB32 (BGRA in memory on little endian systems)
-        # Pillow expects RGBA, so we need to rearrange channels
-        img = Image.frombuffer("RGBA", (width, height), buf.tobytes(), "raw", "BGRA", 0, 1)
-        return img
-
-    # def __str__(self) -> str:
-    #     return str(self.id)
+        # Convert Cairo surface (BGRA) to Pillow image (RGBA)
+        return Image.frombuffer("RGBA", (width, height), buf.tobytes(), "raw", "BGRA", 0, 1)
