@@ -21,3 +21,8 @@ def rand_vertex(lims: Tuple[int, int]):
 
 def sum_vec(v1: Tuple[int, int], v2: Tuple[int, int]):
     return (v1[0] + v2[0], v1[1] + v2[1])
+
+def swap_in_arr(arr, idx1, idx2):
+    aux = arr[idx1]
+    arr[idx1] = arr[idx2]
+    arr[idx2] = aux

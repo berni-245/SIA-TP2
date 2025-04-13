@@ -1,7 +1,7 @@
 from enum import Enum
 import random
 from math import ceil
-from utils import randint
+from utils import randint, swap_in_arr
 from typing import List
 import numpy as np
 import random
@@ -13,7 +13,7 @@ from individual import Individual
 
 class ShapeType(Enum):
     TRIANGLE = "Triangle"
-    ELLIPSE = "Ellipse"
+    # ELLIPSE = "Ellipse"
     SQUARE = "Square"
 
 class Generator:
@@ -79,12 +79,26 @@ class Generator:
 
         return selected
 
-    def two_point_crossover(self, selection: List[Individual], child_count: int) -> List[Individual]:
+    def two_point_crossover(self, selection: List[Individual]) -> List[Individual]:
         children: List[Individual] = []
-        for _ in range(0, child_count // 2):
-            # Note that both parents could be the same individual, not sure if this is correct...
-            parent1 = selection[randint(0, len(selection))]
-            parent2 = selection[randint(0, len(selection))]
+        child_remaining = len(selection) 
+
+        while (child_remaining > 1):
+            idx1 = randint(0, child_remaining)
+            parent1 = selection[idx1]
+            swap_in_arr(selection, idx1, child_remaining - 1)
+            child_remaining -= 1
+
+            idx2 = randint(0, child_remaining)
+            parent2 = selection[idx2]
+            swap_in_arr(selection, idx2, child_remaining - 1)
+            child_remaining -= 1
+
+            # parent1 = selection[randint(0, len(selection))]
+            # child_remaining -= 1
+            # parent2 = selection[randint(0, len(selection))]
+            # child_remaining -= 1
+
             l1 = randint(0, parent1.shape_count)
             l2 = randint(l1, parent1.shape_count)
 
@@ -110,8 +124,8 @@ class Generator:
             new_gen = children
             self.uniform_mutation(new_gen, 0.8)
             if len(children) < self.population:
-                # chosen_parents = random.sample(self.individuals, self.population - len(children))
-                chosen_parents = random.choices(selection, k = self.population - len(children))
+                chosen_parents = random.sample(self.individuals, self.population - len(children))
+                # chosen_parents = random.choices(selection, k = self.population - len(children))
                 new_gen.extend(chosen_parents)
         else:
             new_gen = random.sample(children, self.population)
@@ -166,5 +180,5 @@ class Generator:
     # methods we want to use.
     def new_generation(self, selection_count: int, child_count: int):
         selection = self.elite_selection(selection_count)
-        chilren = self.two_point_crossover(selection, child_count)
-        self.new_generation_young_bias(selection, chilren)
+        children = self.two_point_crossover(selection)
+        self.new_generation_young_bias(selection, children)
