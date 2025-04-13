@@ -5,7 +5,7 @@ from time import sleep
 
 import colour
 from utils import randint, swap_in_arr
-from typing import List
+from typing import Callable, List
 import numpy as np
 import random
 from skimage.color import rgb2lab
@@ -174,19 +174,52 @@ class Generator:
         new_gen = random.sample(self.individuals, self.population)
         self.individuals = new_gen
         self.generation += 1
+
+    def deterministic_tournament_selection(self, child_amount: int) -> List[Individual]:
+        candidate_num = max(2, child_amount // 4) # M individuals
+        children = []
+        while child_amount > 0:
+            chosen_candidates = random.sample(self.individuals, candidate_num)
+            chosen_candidates.sort(key=self.fitness, reverse=True)
+            children.append(chosen_candidates[0])
+            child_amount -= 1
+        return children
+    
+    def probabilistic_tournament_selection(self, child_amount: int) -> List[Individual]:
+        threshold = random.uniform(0.5, 1)
+        children = []
+        while child_amount > 0:
+            chosen_candidates = random.sample(self.individuals, 2)
+            chosen_candidates.sort(key=self.fitness, reverse=True)
+            rand_val = random.random()
+            if rand_val < threshold:
+                children.append(chosen_candidates[0])
+            else:
+                children.append(chosen_candidates[1])
+            child_amount -= 1
+
+    def ranking_selection(self, child_amount: int) -> List[Individual]:
+        self.individuals.sort(key=self.fitness, reverse=True)
+        return self._get_roulette_selection(
+            [random.uniform(0, 1) for _ in range(child_amount)],
+             self._ranking_pseudo_fitness
+    )
+
+    def _ranking_pseudo_fitness(self, ind: Individual) -> float:
+        return (self.population - self.individuals.index(ind)) / self.population
         
     def universal_selection(self, child_amount: int) -> List[Individual]:
         rand_values = []
         for j in range(child_amount):
             rand_val = random.uniform(0, 1)
             rand_values.append((rand_val + j) / child_amount)
-        return self._get_roulette_selection(rand_values)
+        return self._get_roulette_selection(rand_values, self.fitness)
         
-    def roulette_selection(self, child_amout: int) -> List[Individual]:
-        return self._get_roulette_selection([random.uniform(0, 1) for _ in range(child_amout)])
+    def roulette_selection(self, child_amount: int) -> List[Individual]:
+        return self._get_roulette_selection([random.uniform(0, 1) for _ in range(child_amount)], self.fitness)
 
-    def _get_roulette_selection(self, rand_values: List[float]) -> List[Individual]:
-        fitness_sum = np.sum([self.fitness(ind) for ind in self.individuals])
+    def _get_roulette_selection(self, rand_values: List[float], fitness_func: Callable[[Individual], float]) -> List[Individual]:
+        fitness_sum = np.sum([fitness_func(ind) for ind in self.individuals])
 
         accum_relative_fitness = []
         current_rel_fit = 0
@@ -208,7 +241,7 @@ class Generator:
     # The idea would be to somehow pass as parameter which selection, crossover and mutation
     # methods we want to use.
     def new_generation(self, selection_count: int):
-        selection = self.elite_selection(selection_count)
+        selection = self.ranking_selection(selection_count)
         children = self.two_point_crossover(selection)
         self.uniform_mutation(children, 0.15)
         self.new_generation_young_bias(children)
