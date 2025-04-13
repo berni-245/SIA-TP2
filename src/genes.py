@@ -1,5 +1,5 @@
 import random
-from typing import Tuple
+from typing import Tuple, List
 from abc import ABC, abstractmethod
 from utils import rand_vertex, randfloat, randint, clamp
 import cairo
@@ -8,6 +8,7 @@ class Shape(ABC):
     def __init__(self, color: Tuple[float,float,float,float]) -> None:
         self.color = color
         self._multiplier = 1
+
 
     @abstractmethod
     def draw(self, ctx: cairo.Context):
@@ -19,9 +20,9 @@ class Shape(ABC):
     def random(img_size: Tuple[int,int]) -> "Shape":
         pass
 
-    @staticmethod
-    def random_color() -> Tuple[float,float,float,float]:
-        return (randfloat(0, 1), randfloat(0, 1), randfloat(0, 1), randfloat(0, 1))
+    # @staticmethod
+    # def random_color() -> Tuple[float,float,float,float]:
+    #     return (randfloat(0, 1), randfloat(0, 1), randfloat(0, 1), randfloat(0, 1))
 
     def _set_multiplier(self, val: int):
         self._multiplier = val
@@ -33,13 +34,14 @@ class Shape(ABC):
         # Max change in color channel
         delta = 20/255 * self._multiplier
 
-        new_color = (
-            clamp(0, self.color[0] + randfloat(-delta, delta), 1),
-            clamp(0, self.color[1] + randfloat(-delta, delta), 1),
-            clamp(0, self.color[2] + randfloat(-delta, delta), 1),
-            clamp(0, self.color[3] + randfloat(-delta, delta), 1),
-        )
-        self.color = new_color
+        # new_color = (
+        #     clamp(0, self.color[0] + randfloat(-delta, delta), 1),
+        #     clamp(0, self.color[1] + randfloat(-delta, delta), 1),
+        #     clamp(0, self.color[2] + randfloat(-delta, delta), 1),
+        #     clamp(0, self.color[3] + randfloat(-delta, delta), 1),
+        # )
+        # self.color = new_color
+        self.color = Color.get_random_color()
 
     @abstractmethod
     def clone(self) -> "Shape":
@@ -85,7 +87,7 @@ class Triangle(Polygon):
 
     @staticmethod
     def random(img_size: Tuple[int,int]) -> "Triangle":
-        color = Shape.random_color()
+        color = Color.get_random_color()
         # size_lim = 100
         # delta = rand_vertex(img_size)
         # x1, y1 = sum_vec(rand_vertex((size_lim, size_lim)), delta)
@@ -117,7 +119,7 @@ class Square(Polygon):
 
     @staticmethod
     def random(img_size: Tuple[int,int]) -> "Square":
-        color = Shape.random_color()
+        color = Color.get_random_color()
         x1, y1 = randint(0, img_size[0]), randint(0, img_size[1])
         x3, y3 = randint(0, img_size[0]), randint(0, img_size[1])
         x2, y2 = (x3, y1)
@@ -164,3 +166,41 @@ class Square(Polygon):
 #
 #     def clone(self) -> "Ellipse":
 #         return Ellipse(self.color, self.center, self.radii, self.angle)
+
+from typing import List, Tuple
+from utils import randint  # o random.randint si no estás usando una función custom
+
+class Color:
+    _fixed_colors: List[Tuple[float, float, float]] = [
+        (255, 0, 0),       # Red
+        (0, 255, 0),       # Green
+        (0, 0, 255),       # Blue
+        (255, 255, 0),     # Yellow
+        (255, 165, 0),     # Orange
+        (128, 0, 128),     # Purple
+        (0, 255, 255),     # Cyan
+        (255, 192, 203),   # Pink
+        (0, 0, 0),         # Black
+        (255, 255, 255),   # White
+        (128, 128, 128),   # Gray
+        (139, 69, 19),     # Brown
+        (0, 128, 0),       # Dark Green
+        (0, 0, 128),       # Dark Blue
+        (128, 0, 0),       # Dark Red
+        (255, 20, 147),    # Fuchsia
+        (173, 216, 230),   # Light Blue
+        (240, 230, 140),   # Khaki
+        (192, 192, 192),   # Silver
+        (255, 215, 0),     # Golden
+    ]
+
+    _fixed_transparency: List[float] = [0.5, 0.75, 1]
+
+    @classmethod
+    def get_random_color(cls) -> Tuple[float, float, float, float]:
+        color_idx = randint(0, len(cls._fixed_colors))
+        transparency_idx = randint(0, len(cls._fixed_transparency))
+        R, G, B = cls._fixed_colors[color_idx]
+        return (R, G, B, cls._fixed_transparency[transparency_idx])
+
+    
