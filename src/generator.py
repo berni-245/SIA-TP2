@@ -1,4 +1,5 @@
 from enum import Enum
+import math
 import random
 from math import ceil
 from time import sleep
@@ -133,6 +134,36 @@ class Generator:
             children.append(Individual(child_genes2, self.og_img.size))
 
         return children
+    
+    def uniform_crossover(self, selection: List[Individual], prob_of_gen_swap: float = 0.5) -> List[Individual]:
+        children: List[Individual] = []
+        child_remaining = len(selection) 
+
+        while (child_remaining > 1):
+            idx1 = randint(0, child_remaining)
+            parent1 = selection[idx1]
+            swap_in_arr(selection, idx1, child_remaining - 1)
+            child_remaining -= 1
+
+            idx2 = randint(0, child_remaining)
+            parent2 = selection[idx2]
+            swap_in_arr(selection, idx2, child_remaining - 1)
+            child_remaining -= 1
+
+            child_gens1 = []
+            child_gens2 = []
+            for i in range(min(len(parent1.shapes), len(parent2.shapes))):
+                if random.random() < prob_of_gen_swap:
+                    child_gens1.append(parent2.shapes[i].clone())
+                    child_gens2.append(parent1.shapes[i].clone())
+                else:
+                    child_gens1.append(parent1.shapes[i].clone())
+                    child_gens2.append(parent2.shapes[i].clone())
+
+            children.append(Individual(child_gens1, self.og_img.size))
+            children.append(Individual(child_gens2, self.og_img.size))
+
+        return children
 
     def uniform_mutation(self, children: List[Individual], mutation_probability: float):
         for c in children:
@@ -198,6 +229,23 @@ class Generator:
                 children.append(chosen_candidates[1])
             child_amount -= 1
         return children
+    
+    def boltzmann_selection(self, child_amount: int) -> List[Individual]:
+        self._boltzmann_mean = np.mean(np.sum([math.exp(self.fitness(indi) / self._temperature()) for indi in self.individuals]))
+        return self._get_roulette_selection(
+            [random.uniform(0, 1) for _ in range(child_amount)],
+             self._boltzmann_pseudo_fitness
+        )
+
+    def _temperature(self):
+        temp_ini = 1.0 # T0 -> high temperature for more initial exploration
+        temp_end_bound = 0.1 # Tc -> low temperature for better convergence at the end
+        k = 0.0023 # k -> the lower number this is, the "slower" the temperature will decrease, the number was calculated with a max_gen of 2000 in mind using k = -math.log(tc/t0) / max_gen
+
+        return temp_end_bound + (temp_ini - temp_end_bound)*math.exp(-k*self.generation)
+    
+    def _boltzmann_pseudo_fitness(self, ind: Individual):
+        return math.exp(self.fitness(ind) / self._temperature()) / self._boltzmann_mean
 
     def ranking_selection(self, child_amount: int) -> List[Individual]:
         self.individuals.sort(key=self.fitness, reverse=True)
@@ -242,7 +290,7 @@ class Generator:
     # The idea would be to somehow pass as parameter which selection, crossover and mutation
     # methods we want to use.
     def new_generation(self, selection_count: int):
-        selection = self.ranking_selection(selection_count)
+        selection = self.elite_selection(selection_count)
         children = self.two_point_crossover(selection)
         self.uniform_mutation(children, 0.15)
         self.new_generation_young_bias(children)
