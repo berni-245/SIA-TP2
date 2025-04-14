@@ -231,10 +231,13 @@ class Generator:
         return children
     
     def boltzmann_selection(self, child_amount: int) -> List[Individual]:
-        self._boltzmann_mean = np.mean(np.sum([math.exp(self.fitness(indi) / self._temperature()) for indi in self.individuals]))
+        temp = self._temperature()
+        self._boltzmann_mean = np.mean([
+            math.exp(self.fitness(indi) / temp) for indi in self.individuals
+        ])
         return self._get_roulette_selection(
             [random.uniform(0, 1) for _ in range(child_amount)],
-             self._boltzmann_pseudo_fitness
+            lambda ind: self._boltzmann_pseudo_fitness(ind, temp)
         )
 
     def _temperature(self):
@@ -243,9 +246,9 @@ class Generator:
         k = 0.0023 # k -> the lower number this is, the "slower" the temperature will decrease, the number was calculated with a max_gen of 2000 in mind using k = -math.log(tc/t0) / max_gen
 
         return temp_end_bound + (temp_ini - temp_end_bound)*math.exp(-k*self.generation)
-    
-    def _boltzmann_pseudo_fitness(self, ind: Individual):
-        return math.exp(self.fitness(ind) / self._temperature()) / self._boltzmann_mean
+
+    def _boltzmann_pseudo_fitness(self, ind: Individual, temp: float) -> float:
+        return float(math.exp(self.fitness(ind) / temp) / self._boltzmann_mean)
 
     def ranking_selection(self, child_amount: int) -> List[Individual]:
         self.individuals.sort(key=self.fitness, reverse=True)
@@ -273,7 +276,7 @@ class Generator:
         accum_relative_fitness = []
         current_rel_fit = 0
         for i, ind in enumerate(self.individuals):
-            current_rel_fit += ind.fitness / fitness_sum
+            current_rel_fit += fitness_func(ind) / fitness_sum
             accum_relative_fitness.append(1 if (i+1) == len(self.individuals) else current_rel_fit)
 
         to_return = []
@@ -290,7 +293,7 @@ class Generator:
     # The idea would be to somehow pass as parameter which selection, crossover and mutation
     # methods we want to use.
     def new_generation(self, selection_count: int):
-        selection = self.elite_selection(selection_count)
+        selection = self.boltzmann_selection(selection_count)
         children = self.two_point_crossover(selection)
         self.uniform_mutation(children, 0.15)
         self.new_generation_young_bias(children)
