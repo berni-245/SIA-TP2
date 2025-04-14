@@ -1,9 +1,8 @@
+import cairo
 from typing import List, Tuple
 from PIL import Image
-import numpy as np
-import cairo
-from genes import Shape
 from skimage.color import rgb2lab
+from src.genes import Shape
 
 class Individual:
     current_id: int = 1

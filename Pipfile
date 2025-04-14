@@ -8,6 +8,7 @@ pillow = "*"
 numpy = "*"
 pycairo = "*"
 colour-science = "*"
+scikit-image = "*"
 
 [dev-packages]
 

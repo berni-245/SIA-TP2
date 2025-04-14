@@ -1,8 +1,7 @@
-import random
+import cairo
 from typing import Tuple, List
 from abc import ABC, abstractmethod
-from utils import rand_vertex, randfloat, randint, clamp
-import cairo
+from src.utils import rand_vertex, randfloat, randint, clamp
 
 class Shape(ABC):
     def __init__(self, color: Tuple[float,float,float,float]) -> None:
@@ -166,9 +165,6 @@ class Square(Polygon):
 #
 #     def clone(self) -> "Ellipse":
 #         return Ellipse(self.color, self.center, self.radii, self.angle)
-
-from typing import List, Tuple
-from utils import randint  # o random.randint si no estás usando una función custom
 
 class Color:
     _fixed_colors: List[Tuple[float, float, float]] = [

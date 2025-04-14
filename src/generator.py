@@ -1,27 +1,59 @@
-from enum import Enum
 import math
 import random
-from math import ceil
-from time import sleep
-
-import colour
-from utils import randint, swap_in_arr
-from typing import Callable, List
 import numpy as np
 import random
+from enum import Enum
+from math import ceil
+from typing import Callable, Dict, List
 from skimage.color import rgb2lab
 from PIL import Image, ImageChops
-
-from genes import Shape, Square, Triangle
-from individual import Individual
+from src.genes import Shape, Square, Triangle
+from src.individual import Individual
+from src.utils import randint, swap_in_arr
 
 class ShapeType(Enum):
     TRIANGLE = "Triangle"
     # ELLIPSE = "Ellipse"
     SQUARE = "Square"
 
+class SelectionType(Enum): 
+    ELITE = 1
+    ROULETTE = 2
+    UNIVERSAL = 3
+    BOLTZMANN = 4
+    DETERMINISTIC_TOURNAMENT = 5
+    PROBABILISTIC_TOURNAMENT = 6
+
+    @classmethod
+    def from_string(cls, name: str):
+        return cls[name.upper()]
+
+class CrossoverType(Enum):
+    TWO_POINT = 1
+    UNIFORM = 2
+
+    @classmethod
+    def from_string(cls, name: str):
+        return cls[name.upper()]
+
+class MutationType(Enum):
+    UNIFORM = 1
+    COMPLETE = 2
+
+    @classmethod
+    def from_string(cls, name: str):
+        return cls[name.upper()]
+
+class GenerationJumpType(Enum):
+    TRADITIONAL = 1
+    YOUNG_BIAS = 2
+
+    @classmethod
+    def from_string(cls, name: str):
+        return cls[name.upper()]
+
 class Generator:
-    def __init__(self, og_img: Image.Image, shape_count: int, shape_type: ShapeType, initial_pop: int) -> None:
+    def __init__(self, og_img: Image.Image, shape_count: int, shape_type: ShapeType, initial_pop: int, selection_type: SelectionType, crossover_type: CrossoverType, mutation_type: MutationType, generation_jump_type: GenerationJumpType) -> None:
         self.og_img = og_img
         # Uncomment the lines below if you want to use the delta_D fitness
         # rgb = np.asarray(og_img.convert("RGB")) / 255.0
@@ -36,6 +68,12 @@ class Generator:
 
         self.generation = 0
         self.population = initial_pop
+
+        self._create_candidates_dicts()
+        self.selection = self.selections_candidates[selection_type]
+        self.crossover = self.crossover_candidates[crossover_type]
+        self.mutation = self.mutation_cadidates[mutation_type]
+        self.generation_jump = self.generation_jump_candidates[generation_jump_type]
 
         self.individuals: List[Individual] = []
 
@@ -165,7 +203,7 @@ class Generator:
 
         return children
 
-    def uniform_mutation(self, children: List[Individual], mutation_probability: float):
+    def uniform_mutation(self, children: List[Individual], mutation_probability: float = 0.15):
         for c in children:
             to_send_to_back = []
             to_send_to_front = []
@@ -293,7 +331,32 @@ class Generator:
     # The idea would be to somehow pass as parameter which selection, crossover and mutation
     # methods we want to use.
     def new_generation(self, selection_count: int):
-        selection = self.boltzmann_selection(selection_count)
-        children = self.two_point_crossover(selection)
-        self.uniform_mutation(children, 0.15)
-        self.new_generation_young_bias(children)
+        selection = self.selection(selection_count)
+        children = self.crossover(selection)
+        self.mutation(children)
+        self.generation_jump(children)
+
+    def _create_candidates_dicts(self):
+        self.selections_candidates: Dict[SelectionType, Callable[[int], List[Individual]]] = {
+            SelectionType.ELITE: self.elite_selection,
+            SelectionType.ROULETTE: self.roulette_selection,
+            SelectionType.UNIVERSAL: self.universal_selection,
+            SelectionType.BOLTZMANN: self.boltzmann_selection,
+            SelectionType.DETERMINISTIC_TOURNAMENT: self.deterministic_tournament_selection,
+            SelectionType.PROBABILISTIC_TOURNAMENT: self.probabilistic_tournament_selection,
+        }
+
+        self.crossover_candidates: Dict[CrossoverType, Callable[[List[Individual]], List[Individual]]] = {
+            CrossoverType.TWO_POINT: self.two_point_crossover,
+            CrossoverType.UNIFORM: self.uniform_crossover
+        }
+
+        self.mutation_cadidates: Dict[MutationType, Callable[[List[Individual]], None]] = {
+            MutationType.UNIFORM: self.uniform_mutation,
+            MutationType.COMPLETE: self.complete_mutation
+        }
+
+        self.generation_jump_candidates: Dict[GenerationJumpType, Callable[[List[Individual]], None]] = {
+            GenerationJumpType.TRADITIONAL: self.new_generation_trad,
+            GenerationJumpType.YOUNG_BIAS: self.new_generation_young_bias
+        }

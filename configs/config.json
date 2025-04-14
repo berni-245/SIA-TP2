@@ -1,0 +1,7 @@
+{
+    "selection_algorithm": "elite",
+    "crossover_algorithm": "two_point",
+    "mutation_algorithm": "uniform",
+    "gen_jump_algorithm": "young_bias",
+    "image": "argentina.png"
+}
