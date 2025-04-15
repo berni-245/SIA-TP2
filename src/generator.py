@@ -2,6 +2,7 @@ import math
 import random
 import numpy as np
 import random
+import colour
 from enum import Enum
 from math import ceil
 from typing import Callable, Dict, List
@@ -55,9 +56,11 @@ class GenerationJumpType(Enum):
 class Generator:
     def __init__(self, og_img: Image.Image, shape_count: int, shape_type: ShapeType, initial_pop: int, selection_type: SelectionType, crossover_type: CrossoverType, mutation_type: MutationType, generation_jump_type: GenerationJumpType) -> None:
         self.og_img = og_img
+
         # Uncomment the lines below if you want to use the delta_D fitness
-        # rgb = np.asarray(og_img.convert("RGB")) / 255.0
-        # self.lab = rgb2lab(rgb)
+        rgb = np.asarray(og_img.convert("RGB")) / 255.0
+        self.lab = rgb2lab(rgb)
+
         self.shape_count = shape_count
         if shape_type == ShapeType.TRIANGLE:
             self.shape = Triangle
@@ -94,22 +97,22 @@ class Generator:
     def fittest(self) -> Individual:
         return max(self.individuals, key=self._fittest_sort)
 
-# Uncomment the lines below if you want to use the delta_D fitness, you also need to uncomment in the __init__ of generator and individual
-    # def fitness_delta_D(self, individual: Individual) -> float:
-    #     if individual.img.size != self.og_img.size:
-    #         raise ValueError("Images must have the same dimensions.")
-
-        # diff = colour.difference.delta_e.delta_E_CIE1976(self.lab, individual.lab)
-
-        # mean = np.mean(diff)
-        # fitness = 1 - (mean / 100)
-
-        # fitness = max(0.0, min(1.0, float(fitness)))
-
-        # individual.set_fitness(fitness)
-        # return fitness
-    
+# Uncomment the lines below if you want to use the delta_E fitness, you also need to uncomment in the __init__ of generator and individual
     def fitness(self, individual: Individual) -> float:
+        if individual.img.size != self.og_img.size:
+            raise ValueError("Images must have the same dimensions.")
+
+        diff = colour.difference.delta_e.delta_E_CIE1976(self.lab, individual.lab)
+
+        mean = np.mean(diff)
+        fitness = 1 - (mean / 100)
+
+        fitness = max(0.0, min(1.0, float(fitness)))
+
+        individual.set_fitness(fitness)
+        return fitness
+    
+    def fitness_2(self, individual: Individual) -> float:
         """
         Calculate the fitness of an individual by comparing its image to the original image.
 

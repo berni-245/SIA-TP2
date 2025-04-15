@@ -3,6 +3,7 @@ from typing import List, Tuple
 from PIL import Image
 from skimage.color import rgb2lab
 from src.genes import Shape
+import numpy as np
 
 class Individual:
     current_id: int = 1
@@ -21,8 +22,9 @@ class Individual:
 
         self.img = self._cairo_to_img()
         # Uncomment the lines below if you want to use the delta_D fitness
-        # rgb = np.asarray(self.img.convert("RGB")) / 255.0
-        # self.lab = rgb2lab(rgb)
+        rgb = np.asarray(self.img.convert("RGB")) / 255.0
+        self.lab = rgb2lab(rgb)
+
         self.fitness = -1
 
 
