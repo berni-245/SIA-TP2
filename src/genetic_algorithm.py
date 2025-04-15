@@ -45,7 +45,8 @@ class ImageReconstructionGeneticAlgorithm:
                 "time": time.time() - gen_start_time
             })
             fittest.img.save(f"./generated/fittest.png")
-            print(f"gen {gen_count:03}: {fittest.fitness}")
+            if gen_count % 100:
+                print(f"gen {gen_count:03}: {fittest.fitness}")
             if fittest.fitness - last_fitness_check > 0.01:
                 best_fit = fittest
                 last_fitness_check = best_fit.fitness
