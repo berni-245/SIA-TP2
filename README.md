@@ -3,7 +3,7 @@
 ## Introducción
 
 Trabajo práctico para la materia de Sistemas de Inteligencia Artificial en el ITBA. Se buscó implementar un generador de imágenes utilizando algoritmos genéticos. 
-Se implementaron los métodos de selección de padres: **Elite**, **Ruleta**, **Universal**, **Boltzmann**, **Raking**, **Torneo Estatocástico**, **Torneo Probabilístico**.
+Se implementaron los métodos de selección de padres: **Elite**, **Ruleta**, **Universal**, **Boltzmann**, **Ranking**, **Torneo Estatocástico**, **Torneo Probabilístico**.
 Para la cruza se implementó el método de **cruza en dos puntos** y **cruza uniforme**.
 Para la mutación se implementó **mutación uniforme** y **mutación completa**.
 Para los saltos generacionales se implementó **salto generacional tradicional** y **salto generacional sesgo joven**.
@@ -41,7 +41,7 @@ para instalar las dependencias necesarias en el ambiente virtual.
 ## Configuración
 Se puede cambiar la configuración con la que se corre el algoritmo desde el [`config.json`](configs/config.json).
 Las opciones presentes son:
-- `selection_algorithm`: elite / roulette / universal / boltzmann / deterministic_tournament / probabilistic_tournament
+- `selection_algorithm`: elite / roulette / universal / boltzmann / ranking / deterministic_tournament / probabilistic_tournament
 - `crossover_algorith`: two_point / uniform
 - `mutation_algorithm`: uniform / complete
 - `gen_jump_algorithm`: traditional / young_bias

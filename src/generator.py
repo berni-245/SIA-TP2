@@ -24,6 +24,7 @@ class SelectionType(Enum):
     BOLTZMANN = 4
     DETERMINISTIC_TOURNAMENT = 5
     PROBABILISTIC_TOURNAMENT = 6
+    RANKING = 7
 
     @classmethod
     def from_string(cls, name: str):
@@ -363,6 +364,7 @@ class Generator:
             SelectionType.ELITE: self.elite_selection,
             SelectionType.ROULETTE: self.roulette_selection,
             SelectionType.UNIVERSAL: self.universal_selection,
+            SelectionType.RANKING: self.ranking_selection,
             SelectionType.BOLTZMANN: self.boltzmann_selection,
             SelectionType.DETERMINISTIC_TOURNAMENT: self.deterministic_tournament_selection,
             SelectionType.PROBABILISTIC_TOURNAMENT: self.probabilistic_tournament_selection,
