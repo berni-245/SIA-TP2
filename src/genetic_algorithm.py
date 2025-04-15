@@ -86,6 +86,6 @@ class ImageReconstructionGeneticAlgorithm:
         self._min_fitness_goal = min_fitness_goal
         return self
 
-    def use_delta_D(self):
-        self._use_delta_D = True
+    def use_delta_D(self, yes: bool = True):
+        self._use_delta_D = yes
         return self
