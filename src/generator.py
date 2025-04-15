@@ -54,7 +54,18 @@ class GenerationJumpType(Enum):
         return cls[name.upper()]
 
 class Generator:
-    def __init__(self, og_img: Image.Image, shape_count: int, shape_type: ShapeType, initial_pop: int, selection_type: SelectionType, crossover_type: CrossoverType, mutation_type: MutationType, generation_jump_type: GenerationJumpType, use_delta_D: bool = False) -> None:
+    def __init__(
+        self,
+        og_img: Image.Image,
+        shape_count: int,
+        shape_type: ShapeType,
+        initial_pop: int,
+        selection_type: SelectionType,
+        crossover_type: CrossoverType,
+        mutation_type: MutationType,
+        generation_jump_type: GenerationJumpType,
+        use_delta_D: bool = False
+    ) -> None:
         self.og_img = og_img
 
         self.use_delta_D = use_delta_D
@@ -82,6 +93,8 @@ class Generator:
         self.selection = self.selections_candidates[selection_type]
         self.crossover = self.crossover_candidates[crossover_type]
         self.mutation = self.mutation_cadidates[mutation_type]
+        self.init_mutation = 0.9
+        self.mutation_prob = self.init_mutation
         self.generation_jump = self.generation_jump_candidates[generation_jump_type]
 
         self.individuals: List[Individual] = []
@@ -212,17 +225,17 @@ class Generator:
 
         return children
 
-    def uniform_mutation(self, children: List[Individual], mutation_probability: float = 0.15):
+    def uniform_mutation(self, children: List[Individual]):
         for c in children:
             to_send_to_back = []
             to_send_to_front = []
             for s in c.shapes:
                 rand_val = random.random()
-                if rand_val <= mutation_probability / 2: # 50% of mut_prob of changing the shape's properties
+                if rand_val <= self.mutation_prob / 2: # 50% of mut_prob of changing the shape's properties
                     s.mutate(self.og_img.size)
-                elif rand_val <= mutation_probability - mutation_probability/4: # 25% of mut_prob of moving the shape to the back
+                elif rand_val <= self.mutation_prob - self.mutation_prob/4: # 25% of mut_prob of moving the shape to the back
                     to_send_to_back.append(s)
-                elif rand_val <= mutation_probability: # 25% of mut_prob of moving the shape to the front
+                elif rand_val <= self.mutation_prob: # 25% of mut_prob of moving the shape to the front
                     to_send_to_front.append(s)
             for shape in to_send_to_back:
                 c.shapes.remove(shape)
@@ -232,7 +245,8 @@ class Generator:
                 c.shapes.insert(0, shape)      
 
     def complete_mutation(self, children: List[Individual]):
-        self.uniform_mutation(children, 1)
+        if random.random() <= self.mutation_prob:
+            self.uniform_mutation(children)
 
     def new_generation_young_bias(self, children: List[Individual]):
         if (len(children) <= self.population):
@@ -278,7 +292,9 @@ class Generator:
         return children
     
     def boltzmann_selection(self, child_amount: int) -> List[Individual]:
-        temp = self._temperature()
+        # k: the lower number this is, the "slower" the temperature will decrease,
+        # the number was calculated with a max_gen of 2000 in mind using k = -math.log(tc/t0) / max_gen
+        temp = self._temperature(1.0, 0.1, 0.0023)
         self._boltzmann_mean = np.mean([
             math.exp(self.fitness_func(indi) / temp) for indi in self.individuals
         ])
@@ -287,12 +303,8 @@ class Generator:
             lambda ind: self._boltzmann_pseudo_fitness(ind, temp)
         )
 
-    def _temperature(self):
-        temp_ini = 1.0 # T0 -> high temperature for more initial exploration
-        temp_end_bound = 0.1 # Tc -> low temperature for better convergence at the end
-        k = 0.0023 # k -> the lower number this is, the "slower" the temperature will decrease, the number was calculated with a max_gen of 2000 in mind using k = -math.log(tc/t0) / max_gen
-
-        return temp_end_bound + (temp_ini - temp_end_bound)*math.exp(-k*self.generation)
+    def _temperature(self, temp_i: float, temp_f: float, k: float):
+        return temp_f + (temp_i - temp_f)*math.exp(-k*self.generation)
 
     def _boltzmann_pseudo_fitness(self, ind: Individual, temp: float) -> float:
         return float(math.exp(self.fitness_func(ind) / temp) / self._boltzmann_mean)
@@ -344,6 +356,7 @@ class Generator:
         children = self.crossover(selection)
         self.mutation(children)
         self.generation_jump(children)
+        self.mutation_prob = self._temperature(self.init_mutation, 0.08, 0.0014)
 
     def _create_candidates_dicts(self):
         self.selections_candidates: Dict[SelectionType, Callable[[int], List[Individual]]] = {
