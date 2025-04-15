@@ -1,4 +1,3 @@
-from enum import Enum
 from PIL import Image
 import time
 from typing import Dict, Tuple, List
@@ -10,24 +9,24 @@ from src.individual import Individual
 
 class ImageReconstructionGeneticAlgorithm:
     def __init__(self, og_img: Image.Image, shape_count: int):
-        self.og_img = og_img
-        self.shape_count = shape_count
+        self._og_img = og_img
+        self._shape_count = shape_count
         with open("./configs/config.json", "r") as f:
             config = json.load(f)
-        self.selection = SelectionType.from_string(config["selection_algorithm"])
-        self.crossover = CrossoverType.from_string(config["crossover_algorithm"])
-        self.mutation = MutationType.from_string(config["mutation_algorithm"])
-        self.gen_jump = GenerationJumpType.from_string(config["gen_jump_algorithm"])
-        self.population_amount = config["population_amount"]
-        self.generated_child_amount = config["generated_child_amount"]
-        self.max_gen_count = config["max_gen_count"]
-        self.min_fitness_goal = config["min_fitness_goal"]
-        self.use_delta_D = config["use_delta_D"]
+        self._selection = SelectionType.from_string(config["selection_algorithm"])
+        self._crossover = CrossoverType.from_string(config["crossover_algorithm"])
+        self._mutation = MutationType.from_string(config["mutation_algorithm"])
+        self._gen_jump = GenerationJumpType.from_string(config["gen_jump_algorithm"])
+        self._population_amount = config["population_amount"]
+        self._generated_child_amount = config["generated_child_amount"]
+        self._max_gen_count = config["max_gen_count"]
+        self._min_fitness_goal = config["min_fitness_goal"]
+        self._use_delta_D = config["use_delta_D"]
        
     def run(self) -> Tuple[Image.Image, float, List[Dict[str, int | Individual | float]]]:
         gen = Generator(
-            self.og_img, self.shape_count, ShapeType.TRIANGLE, self.population_amount,
-            self.selection, self.crossover, self.mutation, self.gen_jump, self.use_delta_D
+            self._og_img, self._shape_count, ShapeType.TRIANGLE, self._population_amount,
+            self._selection, self._crossover, self._mutation, self._gen_jump, self._use_delta_D
         )
         last_fitness_check = 0
         best_fit = None
@@ -36,7 +35,7 @@ class ImageReconstructionGeneticAlgorithm:
 
         start_time = time.time()
 
-        while last_fitness_check <= self.min_fitness_goal and gen_count <= self.max_gen_count:
+        while last_fitness_check <= self._min_fitness_goal and gen_count <= self._max_gen_count:
             gen_start_time = time.time()
             fittest = gen.fittest
             fitness_evolution.append({
@@ -49,40 +48,44 @@ class ImageReconstructionGeneticAlgorithm:
             if fittest.fitness - last_fitness_check > 0.01:
                 best_fit = fittest
                 last_fitness_check = best_fit.fitness
-            gen.new_generation(self.generated_child_amount)
+            gen.new_generation(self._generated_child_amount)
             gen_count += 1
         if best_fit == None:
             raise Exception("An error occurred and there isn't an individual with fitness greater than 0")
         return (best_fit.img, time.time() - start_time, fitness_evolution)
 
-    def set_selection(self, selection: SelectionType):
-        self.selection = selection
+    def selection(self, selection: SelectionType):
+        self._selection = selection
         return self
 
-    def set_crossover(self, crossover: CrossoverType):
-        self.crossover = crossover
+    def crossover(self, crossover: CrossoverType):
+        self._crossover = crossover
         return self
 
-    def set_mutation(self, mutation: MutationType):
-        self.mutation = mutation
+    def mutation(self, mutation: MutationType):
+        self._mutation = mutation
         return self
 
-    def set_gen_jump(self, gen_jump: GenerationJumpType):
-        self.gen_jump = gen_jump
+    def gen_jump(self, gen_jump: GenerationJumpType):
+        self._gen_jump = gen_jump
         return self
 
-    def set_population_amount(self, population_amount: int):
-        self.population_amount = population_amount
+    def population_amount(self, population_amount: int):
+        self._population_amount = population_amount
         return self
 
-    def set_generated_child_amount(self, generated_child_amount: int):
-        self.generated_child_amount = generated_child_amount
+    def generated_child_amount(self, generated_child_amount: int):
+        self._generated_child_amount = generated_child_amount
         return self
 
-    def set_max_gen_count(self, max_gen_count: int):
-        self.max_gen_count = max_gen_count
+    def max_gen_count(self, max_gen_count: int):
+        self._max_gen_count = max_gen_count
         return self
 
-    def set_min_fitness_goal(self, min_fitness_goal: float):
-        self.min_fitness_goal = min_fitness_goal
+    def min_fitness_goal(self, min_fitness_goal: float):
+        self._min_fitness_goal = min_fitness_goal
+        return self
+
+    def use_delta_D(self):
+        self._use_delta_D = True
         return self
