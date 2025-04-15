@@ -9,6 +9,7 @@ numpy = "*"
 pycairo = "*"
 colour-science = "*"
 scikit-image = "*"
+matplotlib = "*"
 
 [dev-packages]
 
