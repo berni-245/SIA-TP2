@@ -1,7 +1,7 @@
 import cairo
 from typing import Tuple, List
 from abc import ABC, abstractmethod
-from src.utils import rand_vertex, randfloat, randint, clamp
+from src.utils import clampint, rand_vertex, randfloat, randint, clamp
 
 class Shape(ABC):
     def __init__(self, color: Tuple[float,float,float,float]) -> None:
@@ -66,12 +66,23 @@ class Polygon(Shape):
             self.color = (*Color.get_random_fixed_color(), self.color[3])
         elif roulette <= 50: # 10% of changing transparency
             self.color = (self.color[0], self.color[1], self.color[2], Color.get_random_fixed_transparency())
-        else: # 50% of changing position
+        elif roulette <= 80: # 40% of changing position
             delta = ((img_size[0] + img_size[1])//(2*10)) * self._multiplier
 
             new_vertices = tuple(
-                (clamp(0, v[0] + randint(-delta, delta), img_size[0]),
-                    clamp(0, v[1] + randint(-delta, delta), img_size[1]))
+                (
+                    clampint(0, v[0] + randint(-delta, delta), img_size[0]),
+                    clampint(0, v[1] + randint(-delta, delta), img_size[1]),
+                )
+                for v in self.vertices
+            )
+            self.vertices = new_vertices
+        else: # 10% of changing position
+            new_vertices = tuple(
+                (
+                    v[0]//2,
+                    v[1]//2,
+                )
                 for v in self.vertices
             )
             self.vertices = new_vertices
@@ -206,5 +217,3 @@ class Color:
     @classmethod
     def get_full_transparency(cls) -> float:
         return 1
-
-    

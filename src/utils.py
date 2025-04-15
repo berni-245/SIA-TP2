@@ -16,6 +16,9 @@ def randfloat(min: float, max: float) -> float:
 def clamp(min_val: float, x: float, max_val: float) -> float:
     return max(min_val, min(max_val, x))
 
+def clampint(min_val: int, x: int, max_val: int) -> int:
+    return max(min_val, min(max_val, x))
+
 def rand_vertex(lims: Tuple[int, int]):
     factor = 1
     length_divided = lims[0] // factor
