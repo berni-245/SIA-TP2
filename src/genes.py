@@ -168,26 +168,26 @@ class Square(Polygon):
 
 class Color:
     _fixed_colors: List[Tuple[float, float, float]] = [
-        (255, 0, 0),       # Red
-        (0, 255, 0),       # Green
-        (0, 0, 255),       # Blue
-        (255, 255, 0),     # Yellow
-        (255, 165, 0),     # Orange
-        (128, 0, 128),     # Purple
-        (0, 255, 255),     # Cyan
-        (255, 192, 203),   # Pink
-        (0, 0, 0),         # Black
-        (255, 255, 255),   # White
-        (128, 128, 128),   # Gray
-        (139, 69, 19),     # Brown
-        (0, 128, 0),       # Dark Green
-        (0, 0, 128),       # Dark Blue
-        (128, 0, 0),       # Dark Red
-        (255, 20, 147),    # Fuchsia
-        (173, 216, 230),   # Light Blue
-        (240, 230, 140),   # Khaki
-        (192, 192, 192),   # Silver
-        (255, 215, 0),     # Golden
+        (1.0, 0.0, 0.0),         # Red  
+        (0.0, 1.0, 0.0),         # Green  
+        (0.0, 0.0, 1.0),         # Blue  
+        (1.0, 1.0, 0.0),         # Yellow  
+        (1.0, 0.647, 0.0),       # Orange  
+        (0.502, 0.0, 0.502),     # Purple  
+        (0.0, 1.0, 1.0),         # Cyan  
+        (1.0, 0.753, 0.796),     # Pink  
+        (0.0, 0.0, 0.0),         # Black  
+        (1.0, 1.0, 1.0),         # White  
+        (0.502, 0.502, 0.502),   # Gray  
+        (0.545, 0.271, 0.075),   # Brown  
+        (0.0, 0.502, 0.0),       # Dark Green  
+        (0.0, 0.0, 0.502),       # Dark Blue  
+        (0.502, 0.0, 0.0),       # Dark Red  
+        (1.0, 0.078, 0.576),     # Fuchsia  
+        (0.678, 0.847, 0.902),   # Light Blue  
+        (0.941, 0.902, 0.549),   # Khaki  
+        (0.753, 0.753, 0.753),   # Silver  
+        (1.0, 0.843, 0.0),       # Golden  
     ]
 
     _fixed_transparency: List[float] = [0.5, 0.75, 1]
