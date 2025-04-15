@@ -27,7 +27,7 @@ class Shape(ABC):
         self._multiplier = val
 
     @abstractmethod
-    def mutate(self, img_size: Tuple[int, int], multiplier_chance: float):
+    def mutate(self, img_size: Tuple[int, int]):
         pass
 
     @abstractmethod
@@ -52,7 +52,7 @@ class Polygon(Shape):
         ctx.close_path()
         ctx.fill()
 
-    def mutate(self, img_size: Tuple[int, int], multiplier_chance: float):
+    def mutate(self, img_size: Tuple[int, int]):
         roulette = randint(1, 100)
         if roulette <= 30: # 30% of changing color
             delta = 20/255
