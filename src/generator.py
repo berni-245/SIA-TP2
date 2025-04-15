@@ -54,12 +54,18 @@ class GenerationJumpType(Enum):
         return cls[name.upper()]
 
 class Generator:
-    def __init__(self, og_img: Image.Image, shape_count: int, shape_type: ShapeType, initial_pop: int, selection_type: SelectionType, crossover_type: CrossoverType, mutation_type: MutationType, generation_jump_type: GenerationJumpType) -> None:
+    def __init__(self, og_img: Image.Image, shape_count: int, shape_type: ShapeType, initial_pop: int, selection_type: SelectionType, crossover_type: CrossoverType, mutation_type: MutationType, generation_jump_type: GenerationJumpType, use_delta_D: bool = False) -> None:
         self.og_img = og_img
 
+        self.use_delta_D = use_delta_D
+
         # Uncomment the lines below if you want to use the delta_D fitness
-        rgb = np.asarray(og_img.convert("RGB")) / 255.0
-        self.lab = rgb2lab(rgb)
+        if use_delta_D:
+            rgb = np.asarray(og_img.convert("RGB")) / 255.0
+            self.lab = rgb2lab(rgb)
+            self.fitness_func = self.fitness_delta_D
+        else:
+            self.fitness_func = self.fitness_euclidean
 
         self.shape_count = shape_count
         if shape_type == ShapeType.TRIANGLE:
@@ -84,12 +90,12 @@ class Generator:
             shapes: List[Shape] = []
             for _ in range(shape_count):
                 shapes.append(self.shape.random(og_img.size))
-            individual = Individual(shapes, og_img.size)
+            individual = Individual(shapes, og_img.size, self.use_delta_D)
             self.individuals.append(individual)
 
     def _fittest_sort(self, individual: Individual) -> float:
         if individual.fitness < 0:
-            return self.fitness(individual)
+            return self.fitness_func(individual)
         else:
             return individual.fitness
 
@@ -98,7 +104,7 @@ class Generator:
         return max(self.individuals, key=self._fittest_sort)
 
 # Uncomment the lines below if you want to use the delta_E fitness, you also need to uncomment in the __init__ of generator and individual
-    def fitness(self, individual: Individual) -> float:
+    def fitness_delta_D(self, individual: Individual) -> float:
         if individual.img.size != self.og_img.size:
             raise ValueError("Images must have the same dimensions.")
 
@@ -112,7 +118,7 @@ class Generator:
         individual.set_fitness(fitness)
         return fitness
     
-    def fitness_2(self, individual: Individual) -> float:
+    def fitness_euclidean(self, individual: Individual) -> float:
         """
         Calculate the fitness of an individual by comparing its image to the original image.
 
@@ -133,7 +139,7 @@ class Generator:
         return ceil((selection_count - individual_idx)/self.population)
 
     def elite_selection(self, selection_count: int) -> List[Individual]:
-        self.individuals.sort(key=self.fitness, reverse=True)
+        self.individuals.sort(key=self.fitness_func, reverse=True)
         selected = []
         for i in range(0, self.population):
             count = self._elite_selection_individual_amount(selection_count, i)
@@ -171,8 +177,8 @@ class Generator:
             # Necessary so during mutation we don't mutate the parents' genes too.
             child_genes1 = [shape.clone() for shape in child_genes1]
             child_genes2 = [shape.clone() for shape in child_genes2]
-            children.append(Individual(child_genes1, self.og_img.size))
-            children.append(Individual(child_genes2, self.og_img.size))
+            children.append(Individual(child_genes1, self.og_img.size, self.use_delta_D))
+            children.append(Individual(child_genes2, self.og_img.size, self.use_delta_D))
 
         return children
     
@@ -201,8 +207,8 @@ class Generator:
                     child_gens1.append(parent1.shapes[i].clone())
                     child_gens2.append(parent2.shapes[i].clone())
 
-            children.append(Individual(child_gens1, self.og_img.size))
-            children.append(Individual(child_gens2, self.og_img.size))
+            children.append(Individual(child_gens1, self.og_img.size, self.use_delta_D))
+            children.append(Individual(child_gens2, self.og_img.size, self.use_delta_D))
 
         return children
 
@@ -252,7 +258,7 @@ class Generator:
         children = []
         while child_amount > 0:
             chosen_candidates = random.sample(self.individuals, candidate_num)
-            chosen_candidates.sort(key=self.fitness, reverse=True)
+            chosen_candidates.sort(key=self.fitness_func, reverse=True)
             children.append(chosen_candidates[0])
             child_amount -= 1
         return children
@@ -262,7 +268,7 @@ class Generator:
         children = []
         while child_amount > 0:
             chosen_candidates = random.sample(self.individuals, 2)
-            chosen_candidates.sort(key=self.fitness, reverse=True)
+            chosen_candidates.sort(key=self.fitness_func, reverse=True)
             rand_val = random.random()
             if rand_val < threshold:
                 children.append(chosen_candidates[0])
@@ -274,7 +280,7 @@ class Generator:
     def boltzmann_selection(self, child_amount: int) -> List[Individual]:
         temp = self._temperature()
         self._boltzmann_mean = np.mean([
-            math.exp(self.fitness(indi) / temp) for indi in self.individuals
+            math.exp(self.fitness_func(indi) / temp) for indi in self.individuals
         ])
         return self._get_roulette_selection(
             [random.uniform(0, 1) for _ in range(child_amount)],
@@ -289,10 +295,10 @@ class Generator:
         return temp_end_bound + (temp_ini - temp_end_bound)*math.exp(-k*self.generation)
 
     def _boltzmann_pseudo_fitness(self, ind: Individual, temp: float) -> float:
-        return float(math.exp(self.fitness(ind) / temp) / self._boltzmann_mean)
+        return float(math.exp(self.fitness_func(ind) / temp) / self._boltzmann_mean)
 
     def ranking_selection(self, child_amount: int) -> List[Individual]:
-        self.individuals.sort(key=self.fitness, reverse=True)
+        self.individuals.sort(key=self.fitness_func, reverse=True)
         return self._get_roulette_selection(
             [random.uniform(0, 1) for _ in range(child_amount)],
              self._ranking_pseudo_fitness
@@ -306,10 +312,10 @@ class Generator:
         for j in range(child_amount):
             rand_val = random.uniform(0, 1)
             rand_values.append((rand_val + j) / child_amount)
-        return self._get_roulette_selection(rand_values, self.fitness)
+        return self._get_roulette_selection(rand_values, self.fitness_func)
         
     def roulette_selection(self, child_amount: int) -> List[Individual]:
-        return self._get_roulette_selection([random.uniform(0, 1) for _ in range(child_amount)], self.fitness)
+        return self._get_roulette_selection([random.uniform(0, 1) for _ in range(child_amount)], self.fitness_func)
 
     def _get_roulette_selection(self, rand_values: List[float], fitness_func: Callable[[Individual], float]) -> List[Individual]:
         fitness_sum = np.sum([fitness_func(ind) for ind in self.individuals])

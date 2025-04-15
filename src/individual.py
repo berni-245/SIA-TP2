@@ -7,7 +7,7 @@ import numpy as np
 
 class Individual:
     current_id: int = 1
-    def __init__(self, shapes: List[Shape], img_size: Tuple[int, int]) -> None:
+    def __init__(self, shapes: List[Shape], img_size: Tuple[int, int], use_delta_D: bool) -> None:
         self.shapes = shapes
         self.shape_count = len(shapes)
         self.id = Individual.current_id
@@ -22,8 +22,9 @@ class Individual:
 
         self.img = self._cairo_to_img()
         # Uncomment the lines below if you want to use the delta_D fitness
-        rgb = np.asarray(self.img.convert("RGB")) / 255.0
-        self.lab = rgb2lab(rgb)
+        if use_delta_D:
+            rgb = np.asarray(self.img.convert("RGB")) / 255.0
+            self.lab = rgb2lab(rgb)
 
         self.fitness = -1
 

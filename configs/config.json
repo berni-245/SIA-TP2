@@ -5,6 +5,7 @@
     "gen_jump_algorithm": "young_bias",
     "population_amount": 100,
     "generated_child_amount": 50,
-    "max_gen_count": 5,
-    "min_fitness_goal": 0.90
+    "max_gen_count": 3000,
+    "min_fitness_goal": 0.95,
+    "use_delta_D": false
 }

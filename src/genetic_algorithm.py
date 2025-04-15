@@ -22,11 +22,12 @@ class ImageReconstructionGeneticAlgorithm:
         self.generated_child_amount = config["generated_child_amount"]
         self.max_gen_count = config["max_gen_count"]
         self.min_fitness_goal = config["min_fitness_goal"]
+        self.use_delta_D = config["use_delta_D"]
        
     def run(self) -> Tuple[Image.Image, float, List[Dict[str, int | Individual | float]]]:
         gen = Generator(
             self.og_img, self.shape_count, ShapeType.TRIANGLE, self.population_amount,
-            self.selection, self.crossover, self.mutation, self.gen_jump
+            self.selection, self.crossover, self.mutation, self.gen_jump, self.use_delta_D
         )
         last_fitness_check = 0
         best_fit = None
