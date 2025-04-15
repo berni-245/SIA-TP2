@@ -12,7 +12,7 @@ class ImageReconstructionGeneticAlgorithm:
     def __init__(self, og_img: Image.Image, shape_count: int):
         self.og_img = og_img
         self.shape_count = shape_count
-        with open("configs/config.json", "r") as f:
+        with open("./configs/config.json", "r") as f:
             config = json.load(f)
         self.selection = SelectionType.from_string(config["selection_algorithm"])
         self.crossover = CrossoverType.from_string(config["crossover_algorithm"])
