@@ -78,13 +78,11 @@ class Polygon(Shape):
             )
             self.vertices = new_vertices
         else: # 10% of changing position
-            new_vertices = tuple(
-                (
-                    v[0]//2,
-                    v[1]//2,
-                )
-                for v in self.vertices
-            )
+            (x, y) = rand_vertex(img_size)
+            new_vertices = tuple((
+                clampint(0, v[0]//2 + x, img_size[0]),
+                clampint(0, v[1]//2 + y, img_size[1]),
+            ) for v in self.vertices)
             self.vertices = new_vertices
 
     def __str__(self) -> str:
