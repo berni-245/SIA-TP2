@@ -132,7 +132,7 @@ class Generator:
         np_diff = np.array(diff)
 
         mean = np.mean(np_diff)/255
-        individual.set_fitness(float(1 - mean))
+        individual.set_fitness(float(1 - mean)**2)
         return individual.fitness
 
     def _elite_selection_individual_amount(self, selection_count: int, individual_idx: int) -> int:
@@ -219,7 +219,7 @@ class Generator:
             for s in c.shapes:
                 rand_val = random.random()
                 if rand_val <= mutation_probability / 2: # 50% of mut_prob of changing the shape's properties
-                    s.mutate(self.og_img.size, 0.5)
+                    s.mutate(self.og_img.size)
                 elif rand_val <= mutation_probability - mutation_probability/4: # 25% of mut_prob of moving the shape to the back
                     to_send_to_back.append(s)
                 elif rand_val <= mutation_probability: # 25% of mut_prob of moving the shape to the front

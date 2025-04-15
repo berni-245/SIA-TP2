@@ -27,7 +27,7 @@ class Shape(ABC):
         self._multiplier = val
 
     @abstractmethod
-    def mutate(self, img_size: Tuple[int, int], multiplier_chance: float):
+    def mutate(self, img_size: Tuple[int, int]):
         pass
 
     @abstractmethod
@@ -52,7 +52,7 @@ class Polygon(Shape):
         ctx.close_path()
         ctx.fill()
 
-    def mutate(self, img_size: Tuple[int, int], multiplier_chance: float):
+    def mutate(self, img_size: Tuple[int, int]):
         roulette = randint(1, 100)
         if roulette <= 30: # 30% of changing color
             delta = 20/255
@@ -78,13 +78,11 @@ class Polygon(Shape):
             )
             self.vertices = new_vertices
         else: # 10% of changing position
-            new_vertices = tuple(
-                (
-                    v[0]//2,
-                    v[1]//2,
-                )
-                for v in self.vertices
-            )
+            (x, y) = rand_vertex(img_size)
+            new_vertices = tuple((
+                clampint(0, v[0]//2 + x, img_size[0]),
+                clampint(0, v[1]//2 + y, img_size[1]),
+            ) for v in self.vertices)
             self.vertices = new_vertices
 
     def __str__(self) -> str:
