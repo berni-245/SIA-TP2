@@ -3,5 +3,8 @@
     "crossover_algorithm": "two_point",
     "mutation_algorithm": "uniform",
     "gen_jump_algorithm": "young_bias",
-    "image": "argentina.png"
+    "population_amount": 100,
+    "generated_child_amount": 50,
+    "max_gen_count": 5,
+    "min_fitness_goal": 0.90
 }

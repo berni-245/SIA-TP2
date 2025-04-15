@@ -1,7 +1,8 @@
 import json
 import argparse
+from pathlib import Path
 from PIL import Image
-from src.generator import Generator, ShapeType, SelectionType, CrossoverType, MutationType, GenerationJumpType
+from src.genetic_algorithm import ImageReconstructionGeneticAlgorithm
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run genetic image generator.")
@@ -12,23 +13,11 @@ if __name__ == "__main__":
     with open("configs/config.json", "r") as f:
         config = json.load(f)
 
-    reference_img = Image.open(f"{args.image}").convert("RGBA")
+    image_path = Path(args.image)
+    reference_img = Image.open(f"{image_path}").convert("RGBA")
 
-    gen = Generator(
-        reference_img, args.shape_count, ShapeType.TRIANGLE, 100,
-        SelectionType.from_string(config["selection_algorithm"]),
-        CrossoverType.from_string(config["crossover_algorithm"]),
-        MutationType.from_string(config["mutation_algorithm"]),
-        GenerationJumpType.from_string(config["gen_jump_algorithm"])
-    )
-    iters = 1000
-    last_fitness_check = 0
-    while last_fitness_check < 0.95:
-        gen.new_generation(50)
-        fittest = gen.fittest
-        if fittest.fitness - last_fitness_check > 0.01:
-            last_fitness_check = fittest.fitness
-
-        fittest.img.save(f"./generated/fittest.png")
-        print(f"Gen {gen.generation:03} - Fitness: {fittest.fitness}")
-        iters -= 1
+    genetic_algorithm = ImageReconstructionGeneticAlgorithm(reference_img, args.shape_count)
+    img, elapsed_time, fitness_evolution = genetic_algorithm.run()
+    img.save(f"./generated/{image_path.name}")
+    print(f"Elapsed time: {elapsed_time}")
+    print(f"Final gen: {len(fitness_evolution) - 1}")
