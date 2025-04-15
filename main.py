@@ -15,9 +15,17 @@ if __name__ == "__main__":
 
     image_path = Path(args.image)
     reference_img = Image.open(f"{image_path}").convert("RGBA")
+    # (w,h) = reference_img.size
+    # reference_img.resize((w//2,h//2)).save(f"./assets/small-{image_path.name}")
 
     genetic_algorithm = ImageReconstructionGeneticAlgorithm(reference_img, args.shape_count)
-    img, elapsed_time, fitness_evolution = genetic_algorithm.run()
-    img.save(f"./generated/{image_path.name}")
+    fitness_evolution, elapsed_time = genetic_algorithm.run()
+
+    fittest_individual = max(fitness_evolution, key=lambda x: x['fittest'].fitness)
+    fittest = fittest_individual['fittest']
+    best_gen = fittest_individual['gen']
+    fittest.img.save(f"./generated/{image_path.name}")
     print(f"Elapsed time: {elapsed_time}")
     print(f"Final gen: {len(fitness_evolution) - 1}")
+    print(f"Fittest gen: {best_gen}")
+    print(f"Max fitness: {fittest.fitness}")

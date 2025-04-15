@@ -1,11 +1,16 @@
 from PIL import Image
 import time
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, TypedDict
 
 from src.generator import Generator, SelectionType, CrossoverType, MutationType, GenerationJumpType, ShapeType
 import json
 
 from src.individual import Individual
+
+class GenerationData(TypedDict):
+    gen: int
+    fittest: Individual
+    score: float
 
 class ImageReconstructionGeneticAlgorithm:
     def __init__(self, og_img: Image.Image, shape_count: int):
@@ -23,13 +28,12 @@ class ImageReconstructionGeneticAlgorithm:
         self._min_fitness_goal = config["min_fitness_goal"]
         self._use_delta_D = config["use_delta_D"]
        
-    def run(self) -> Tuple[Image.Image, float, List[Dict[str, int | Individual | float]]]:
+    def run(self) -> Tuple[List[GenerationData], float]:
         gen = Generator(
             self._og_img, self._shape_count, ShapeType.TRIANGLE, self._population_amount,
             self._selection, self._crossover, self._mutation, self._gen_jump, self._use_delta_D
         )
         last_fitness_check = 0
-        best_fit = None
         gen_count = 0
         fitness_evolution = []
 
@@ -38,21 +42,17 @@ class ImageReconstructionGeneticAlgorithm:
         while last_fitness_check <= self._min_fitness_goal and gen_count <= self._max_gen_count:
             gen_start_time = time.time()
             fittest = gen.fittest
+            if gen_count % 100 == 0:
+                print(f"gen {gen_count:03}: {fittest.fitness}")
+            last_fitness_check = fittest.fitness
+            gen.new_generation(self._generated_child_amount)
             fitness_evolution.append({
                 "gen": gen_count,
                 "fittest": fittest,
                 "time": time.time() - gen_start_time
             })
-            if gen_count % 100 == 0:
-                print(f"gen {gen_count:03}: {fittest.fitness}")
-            if fittest.fitness - last_fitness_check > 0.01:
-                best_fit = fittest
-                last_fitness_check = best_fit.fitness
-            gen.new_generation(self._generated_child_amount)
             gen_count += 1
-        if best_fit == None:
-            raise Exception("An error occurred and there isn't an individual with fitness greater than 0")
-        return (best_fit.img, time.time() - start_time, fitness_evolution)
+        return (fitness_evolution, time.time() - start_time)
 
     def selection(self, selection: SelectionType):
         self._selection = selection
