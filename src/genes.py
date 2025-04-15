@@ -66,7 +66,7 @@ class Polygon(Shape):
             self.color = (*Color.get_random_fixed_color(), self.color[3])
         elif roulette <= 50: # 10% of changing transparency
             self.color = (self.color[0], self.color[1], self.color[2], Color.get_random_fixed_transparency())
-        elif roulette <= 80: # 40% of changing position
+        elif roulette <= 80: # 30% of changing position
             delta = ((img_size[0] + img_size[1])//(2*10)) * self._multiplier
 
             new_vertices = tuple(
@@ -77,7 +77,7 @@ class Polygon(Shape):
                 for v in self.vertices
             )
             self.vertices = new_vertices
-        else: # 10% of changing position
+        else: # 20% of changing position
             (x, y) = rand_vertex(img_size)
             new_vertices = tuple((
                 clampint(0, v[0]//2 + x, img_size[0]),
