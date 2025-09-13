@@ -71,7 +71,6 @@ class Generator:
 
         self.use_delta_D = use_delta_D
 
-        # Uncomment the lines below if you want to use the delta_D fitness
         if use_delta_D:
             rgb = np.asarray(og_img.convert("RGB")) / 255.0
             self.lab = rgb2lab(rgb)
@@ -117,7 +116,6 @@ class Generator:
     def fittest(self) -> Individual:
         return max(self.individuals, key=self._fittest_sort)
 
-# Uncomment the lines below if you want to use the delta_E fitness, you also need to uncomment in the __init__ of generator and individual
     def fitness_delta_D(self, individual: Individual) -> float:
         if individual.img.size != self.og_img.size:
             raise ValueError("Images must have the same dimensions.")
